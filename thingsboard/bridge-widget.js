@@ -25,7 +25,12 @@ self.onInit = function () {
 
   async function login() {
     if (!S.username || !S.password) throw new Error('ยังไม่ได้ใส่รหัสผ่านของบัญชีแอปในวิดเจ็ต CamLock Bridge');
-    var r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: S.username, password: S.password }) });
+    var r;
+    for (var i = 0; i < 3; i++) {   // thingsboard.cloud บางครั้งตอบ 5xx ชั่วคราว ลองใหม่
+      r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: S.username, password: S.password }) });
+      if (r.status < 500) break;
+      await new Promise(function (res) { setTimeout(res, 1000 * (i + 1)); });
+    }
     if (!r.ok) throw new Error('บัญชีแอปเข้า ThingsBoard ไม่ได้ (' + r.status + ') ตรวจอีเมล/รหัสผ่านในวิดเจ็ต');
     var j = await r.json();
     jwt = j.token; exp = Date.now() + 60 * 60 * 1000;
