@@ -209,7 +209,7 @@ h3{font-size:16px;font-weight:600}
 </div>
 <div class="printqr" id="printqr"></div>
 
-<script src="config.js?v=3"></script>
+<script src="config.js?v=4"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -389,6 +389,7 @@ async function tbCall(msg){
 // เรียกคำสั่งบนตู้: แอป → ThingsBoard RPC → MQTT → ESP32
 async function rpc(method,data){
   const j=await tbCall({kind:'rpc',method,params:Object.assign({t:token},data||{})});
+  if(j&&j.ok!==true&&!j.msg)j.msg=j.error==='unknown method'?'ตู้ยังใช้เฟิร์มแวร์เก่า กรุณาอัปโหลด camlock.ino ตัวใหม่ลงบอร์ด':(j.error||'ตู้ตอบกลับผิดพลาด');
   if(j.offline)online=false;
   if(j&&j.code===401&&token){logoutLocal('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');}
   return j;
