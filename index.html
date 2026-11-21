@@ -209,7 +209,7 @@ h3{font-size:16px;font-weight:600}
 </div>
 <div class="printqr" id="printqr"></div>
 
-<script src="config.js?v=2"></script>
+<script src="config.js?v=3"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -369,7 +369,8 @@ function bridge(){
   bridgePromise=new Promise((resolve,reject)=>{
     const f=document.createElement('iframe');
     f.src=BRIDGE;f.title='ThingsBoard';f.setAttribute('aria-hidden','true');f.tabIndex=-1;
-    f.style.cssText='position:fixed;left:-10000px;top:0;width:400px;height:300px;border:0;opacity:0;pointer-events:none';
+    // ต้องอยู่ในจอ (แต่มองไม่เห็น) ไม่งั้น ThingsBoard จะไม่โหลดวิดเจ็ต
+    f.style.cssText='position:fixed;right:0;bottom:0;width:320px;height:240px;border:0;opacity:0;pointer-events:none;z-index:-1';
     f._resolve=resolve;bridgeFrame=f;document.body.appendChild(f);
     setTimeout(()=>{if(f._resolve){f._resolve=null;f.remove();bridgeFrame=null;bridgePromise=null;reject(new Error('เชื่อม ThingsBoard ไม่สำเร็จ ลองรีเฟรชหน้า'));}},45000);
   });
