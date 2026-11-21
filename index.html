@@ -258,6 +258,7 @@ h3{font-size:16px;font-weight:600}
 .vimg{aspect-ratio:3/4;background:var(--surf2);border-radius:12px;display:grid;place-items:center;overflow:hidden;margin:4px 0 10px}
 .vimg img{width:100%;height:100%;object-fit:cover}
 label.btn input{display:none}
+.evcard .vthumb{margin:10px 0 0}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
@@ -272,7 +273,7 @@ label.btn input{display:none}
 </div>
 <div class="printqr" id="printqr"></div>
 
-<script src="config.js?v=7"></script>
+<script src="config.js?v=8"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -728,16 +729,18 @@ function updateOpen(){
   const left=Math.max(0,Math.ceil((f.ms-(Date.now()-f.t))/1000));
   $('#cap3d').innerHTML=f.closed?`${ic('lock')} ประตูปิด · ล็อกแล้ว`:unlocking?`${ic('unlock')} ปลดล็อกอยู่ · ล็อกเองใน ${left} วิ`:isOpen?`${ic('door')} ประตูเปิด`:`${ic('lock')} ล็อกอยู่`;
   const step=(state,txt)=>`<div class="s ${state}"><span class="m">${state==='done'?'✓':state==='now'?'›':'·'}</span><span>${txt}</span></div>`;
+  const r=myRentals.find(x=>x.id==f.rid);
+  const hasPhoto=!!(f.photo||(r&&(ret?r.photoRet:r.photoPick)));
   const lines=[
     step('done',`ส่งคำสั่ง → ThingsBoard → ${esc(S.locker?S.locker.name:'ตู้')} (#${f.rid})`),
     step('done','ESP32 ตรวจสิทธิ์ผ่าน → GPIO26 = HIGH → รีเลย์ทำงาน'),
-    step(unlocking?'now':'done',unlocking?`กลอนเปิดค้าง (ล็อกเองใน <b>${left}</b> วินาที)`:'กลอน → <b>ล็อกแล้ว</b>'),
+    step(unlocking?'now':'done',unlocking?`กลอนเปิดค้าง (ล็อกเองใน <b class="cd"></b> วินาที)`:'กลอน → <b>ล็อกแล้ว</b>'),
     S.reed===false
       ?step(f.sawOpen?'done':'now',f.sawOpen?'ประตู<b>ปลดล็อกแล้ว</b> ดึงเปิดได้เลย':'รอตู้ตอบรับ…')
       :step(f.sawOpen?'done':'now',f.sawOpen?'reed switch → <b>ประตูเปิดแล้ว</b>':'รอดึงประตูเปิด…'),
-    step(f.closed?'done':(f.sawOpen?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':(ret?'ใส่กล้องเข้าตู้':'หยิบกล้องออก')+' ปิดประตู แล้วกด “ล็อกตู้”'),
+    step(hasPhoto?'done':(f.sawOpen?'now':'wait'),hasPhoto?'รูปหลักฐาน → <b>บันทึกแล้ว</b>':(ret?'ใส่กล้องเข้าตู้ แล้วถ่ายรูปหลักฐาน':'หยิบกล้องออก แล้วถ่ายรูปหลักฐาน')),
+    step(f.closed?'done':(hasPhoto?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':'ปิดประตู แล้วกด “ล็อกตู้”'),
   ];
-  const r=myRentals.find(x=>x.id==f.rid);
   let after='';
   if(f.closed){
     if(ret){const done=r&&r.status==='returned';
@@ -748,10 +751,16 @@ function updateOpen(){
     after=`<div class="alert amber">${ic('info')}<div>กลอนล็อกกลับแล้วแต่ประตูยังไม่ถูกเปิด กดปลดล็อกอีกครั้งได้</div></div>
       <button class="btn ghost" data-act="reopen" data-rid="${f.rid}">${ic('unlock')} ปลดล็อกอีกครั้ง</button>`;
   }
-  const html=`<div class="term">${lines.join('')}</div>${after}
-    ${!f.closed&&(unlocking||isOpen)?`<button class="btn amber" data-act="lockNow">${ic('lock')} ${ret?'ใส่กล้องแล้ว':'หยิบกล้องแล้ว'} ล็อกตู้</button>`:''}
+  const evCard=(f.sawOpen||f.closed)?`<div class="card evcard"><div class="row"><div class="ic ${hasPhoto?'ok':'amber'}" style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center">${ic(hasPhoto?'check':'cam')}</div>
+      <div class="grow"><b>รูปหลักฐาน${ret?'การคืน':'การรับ'}</b><div class="xs muted">${ret?'ถ่ายให้เห็นกล้องวางในตู้ ครบอุปกรณ์':'ถ่ายกล้องที่หยิบออกมา ให้เห็นสภาพก่อนใช้'}</div></div>
+      <label class="btn sm ${hasPhoto?'ghost':''}">${hasPhoto?'ถ่ายใหม่':'ถ่ายรูป'}<input type="file" accept="image/*" capture="environment" data-ev="${ret?'return':'pickup'}" data-rid="${f.rid}"></label></div>
+      ${f.photo?`<img class="vthumb" src="${f.photo}" alt="">`:''}</div>`:'';
+  const html=`<div class="term">${lines.join('')}</div>${evCard}${after}
+    ${!f.closed&&(unlocking||isOpen)?`<button class="btn amber" data-act="lockNow" ${hasPhoto?'':'disabled'}>${ic('lock')} ${ret?'ใส่กล้องแล้ว':'หยิบกล้องแล้ว'} ล็อกตู้</button>
+      ${hasPhoto?'':`<p class="xs muted center" style="margin:8px 0 0">ถ่ายรูปหลักฐานก่อนจึงกดล็อกได้ · ถ้าไม่กด ตู้จะล็อกเองใน <b class="cd"></b> วินาที</p>`}`:''}
     ${f.closed?`<button class="btn" data-act="closeOpen">${ret?'กลับหน้าแรก':'ดูเวลาที่เหลือ'}</button>`:''}`;
   const dyn=$('#openDyn');if(dyn.dataset.h!==html){dyn.innerHTML=html;dyn.dataset.h=html;}
+  dyn.querySelectorAll('.cd').forEach(el=>el.textContent=left);
 }
 AFTER.open=()=>{
   updateOpen();
@@ -840,12 +849,17 @@ VIEWS.verify=()=>{
     <p class="xs muted center" style="margin-top:10px">รูปเก็บไว้ในตู้เท่านั้น และถูกลบทันทีหลังผู้ดูแลตรวจเสร็จ</p>`;
 };
 // ย่อรูปให้เล็กพอส่งผ่าน ThingsBoard (< 19KB)
-function shrinkImage(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{
+function shrinkImage(file,limit=19000){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{
   let max=520,q=.7,out='';
   for(let i=0;i<8;i++){const sc=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
-    c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<19000)break;q=Math.max(.35,q-.1);max=Math.round(max*.82);}
-  URL.revokeObjectURL(img.src);out.length<19500?res(out):rej(new Error('รูปใหญ่เกินไป'));};img.onerror=()=>rej(new Error('อ่านรูปไม่ได้'));img.src=URL.createObjectURL(file);});}
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<limit)break;q=Math.max(.35,q-.1);max=Math.round(max*.82);}
+  URL.revokeObjectURL(img.src);out.length<limit+500?res(out):rej(new Error('รูปใหญ่เกินไป'));};img.onerror=()=>rej(new Error('อ่านรูปไม่ได้'));img.src=URL.createObjectURL(file);});}
 document.addEventListener('change',async e=>{
+  const ev=e.target.dataset&&e.target.dataset.ev;
+  if(ev&&e.target.files[0]){const f=ui.openFlow;try{toast('กำลังส่งรูปหลักฐาน…');const data=await shrinkImage(e.target.files[0],15000);
+    const j=await rpc('evidence',{rid:e.target.dataset.rid,kind:ev,img:data});if(!j.ok){toast(j.msg);return;}
+    if(f&&f.rid==e.target.dataset.rid){f.photo=data;}const i=myRentals.findIndex(x=>x.id===j.rental.id);if(i>=0)myRentals[i]=j.rental;
+    toast('บันทึกหลักฐานแล้ว');if(cur().name==='open')updateOpen();else render(false);}catch(err){toast(err.message);}return;}
   const k=e.target.dataset&&e.target.dataset.vk;if(!k||!e.target.files[0])return;
   try{toast('กำลังอัปโหลดรูป…');const data=await shrinkImage(e.target.files[0]);
     const j=await rpc('verifyUpload',{kind:k,img:data});if(!j.ok){toast(j.msg);return;}
@@ -883,6 +897,8 @@ function adminRentalCard(r){
   if(['await','verify','ready'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="cancel" data-rid="${r.id}">ยกเลิก</button>`);
   if(r.status==='active'){if(due>0&&!r.notified)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿</button>`);acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="returned" data-rid="${r.id}">รับคืนเอง</button>`);}
   if(r.status==='returned'){if(due>0&&!r.refunded)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿ เป็นเงินสด</button>`);if(!r.refunded)acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">คืนมัดจำแล้ว ${baht(refundable(r))} ฿</button>`);}
+  if(r.photoPick)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="pickup">${ic('cam')} หลักฐานรับ</button>`);
+  if(r.photoRet)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="return">${ic('cam')} หลักฐานคืน</button>`);
   if(['returned','cancelled'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="delete" data-rid="${r.id}">${ic('trash')}</button>`);
   return `<div class="rcard"><div class="row"><div class="grow"><b style="font-family:var(--fd)">#${r.id} ${esc(r.camName)}</b><div class="meta">${esc(r.uname)} · ${esc(r.sid)}</div></div>${statusTag(r)}</div>
     <div class="meta" style="margin-top:6px">${r.hours} ชม. · ยอด ${baht(r.amount)} ฿ · ชำระแล้ว ${baht(r.paid)} ฿${r.lateFee?` · ค่าปรับ ${baht(r.lateFee)} ฿`:''}${r.refunded?' · คืนมัดจำแล้ว':''}</div>
@@ -900,7 +916,7 @@ VIEWS.a_home=()=>{
     ${!online?`<div class="alert warn">${ic('wifi')}<div>ตู้ออฟไลน์ ตรวจไฟเลี้ยงและ WiFi “${esc(S.ssid||'ESP_CAMLOCK')}” ${S.lastSeen?'· ออนไลน์ล่าสุด '+tFull(Math.floor(S.lastSeen/1000)):''}</div></div>`:''}
     ${lockerHero()}
     <div class="card"><div class="door"><div class="ic ${d.c}">${ic(d.i)}</div><div style="flex:1"><h3>${d.t}</h3><div class="muted sm">${d.s}</div></div></div>
-      <button class="btn" style="margin-top:12px" data-act="aUnlock">${ic('unlock')} ปลดล็อกตอนนี้</button></div>
+      ${S.unlocking?`<button class="btn amber" style="margin-top:12px" data-act="aLock">${ic('lock')} ล็อกตอนนี้</button><p class="xs muted center" style="margin:6px 0 0">ถ้าไม่กด ตู้จะล็อกเองใน ${Math.round((S.unlockMs||30000)/1000)} วินาทีหลังปลดล็อก</p>`:`<button class="btn" style="margin-top:12px" data-act="aUnlock">${ic('unlock')} ปลดล็อกตอนนี้</button>`}</div>
     <div class="grid3" style="margin-bottom:4px"><div class="tile"><div class="v">${verify.length}</div><div class="k">รอตรวจเงิน</div></div><div class="tile"><div class="v">${active.length}</div><div class="k">กำลังเช่า</div></div><div class="tile"><div class="v" style="${late.length?'color:var(--warn)':''}">${late.length}</div><div class="k">เกินกำหนด</div></div></div>
     ${verify.length?`<div class="sec"><h2>รอตรวจสอบการชำระ</h2></div>${verify.map(adminRentalCard).join('')}`:''}
     ${late.length?`<div class="sec"><h2>เกินกำหนดคืน</h2></div>${late.map(adminRentalCard).join('')}`:''}
@@ -1020,7 +1036,10 @@ ACT.logout=async()=>{await rpc('logout');logoutLocal('ออกจากระ�
 function logoutLocal(msg){token='';ui.authMode='login';ui.vphoto={};localStorage.removeItem('cl_t');me=null;myRentals=[];AD={users:[],cams:[],rentals:[]};ui.settings=null;ui.logs=null;route={tab:'home',stack:[]};render(true);if(msg)toast(msg);}
 
 // ผู้ดูแล
-ACT.aUnlock=async()=>{const j=await rpc('adminUnlock');toast(j.ok?'ปลดล็อกแล้ว':j.msg);S.unlocking=j.ok;softRender();};
+ACT.aUnlock=async()=>{const j=await rpc('adminUnlock');toast(j.ok?'ปลดล็อกแล้ว กดอีกครั้งเพื่อล็อก':j.msg);if(j.ok){S.unlocking=true;S.door='open';}softRender();};
+ACT.aLock=async()=>{const j=await rpc('lockNow');toast(j.ok?'ล็อกแล้ว':j.msg);if(j.ok){S.unlocking=false;S.door='closed';}softRender();};
+ACT.aEvidence=async d=>{sheet(`<h2>รูปหลักฐาน${d.k==='return'?'การคืน':'การรับ'} #${d.rid}</h2><div class="vimg" id="evImg" style="aspect-ratio:4/3;margin-top:12px"><div class="spin"></div></div><button class="btn ghost" data-act="closeSheet">ปิด</button>`);
+  const j=await rpc('adminEvidence',{rid:d.rid,kind:d.k});const b=$('#evImg');if(b)b.innerHTML=j.ok?`<img src="${j.img}" alt="" style="object-fit:contain">`:`<span class="xs muted">${esc(j.msg)}</span>`;};
 ACT.aRent=async d=>{
   const labels={cancel:['ยกเลิกรายการนี้?','กล้องจะกลับมาว่าง ถ้าลูกค้าโอนเงินแล้วต้องคืนเงินเอง'],delete:['ลบรายการนี้?','ลบออกจากประวัติถาวร'],returned:['รับคืนกล้องเอง?','ใช้เมื่อลูกค้าคืนกล้องกับผู้ดูแลโดยตรง ระบบจะไม่คิดค่าปรับ'],reject:['ยังไม่ได้รับเงิน?','รายการจะกลับไปเป็น “รอชำระเงิน” ให้ลูกค้าโอนใหม่']};
   if(labels[d.a]&&!await confirmBox(labels[d.a][0],labels[d.a][1],'ยืนยัน',d.a==='delete'||d.a==='cancel'))return;
