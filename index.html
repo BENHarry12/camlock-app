@@ -350,48 +350,55 @@ let online=true;
    แอป ──REST/RPC──> ThingsBoard ──MQTT──> ESP32 (ตู้)
    ===================================================================== */
 const CFG=window.CAMLOCK_CONFIG||{};
-const TB=(CFG.tbUrl||'https://thingsboard.cloud').replace(/\/$/,'');
-let jwt=sessionStorage.getItem('cl_jwt')||'', jwtRefresh=sessionStorage.getItem('cl_jwtr')||'';
-let lastErr='';
-async function tbLogin(){
-  if(jwtRefresh){try{const r=await fetch(TB+'/api/auth/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:jwtRefresh})});
-    if(r.ok){const j=await r.json();jwt=j.token;jwtRefresh=j.refreshToken;saveJwt();return true;}}catch(e){}}
-  const r=await fetch(TB+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:CFG.tbUsername,password:CFG.tbPassword})});
-  if(!r.ok)throw new Error('เข้าสู่ ThingsBoard ไม่ได้ ตรวจ tbUsername/tbPassword ใน config.js');
-  const j=await r.json();jwt=j.token;jwtRefresh=j.refreshToken;saveJwt();return true;
+/* thingsboard.cloud ไม่ยอมให้เว็บจาก github.io เรียก REST API ตรง ๆ (CORS)
+   แอปจึงฝังแดชบอร์ดสาธารณะของ ThingsBoard ไว้ใน iframe ที่มองไม่เห็น
+   วิดเจ็ต "CamLock Bridge" ในแดชบอร์ดนั้นเรียก API ให้ แล้วตอบกลับทาง postMessage
+   แอป ⇄ Bridge (thingsboard.cloud) ──REST──> ThingsBoard ──MQTT──> ESP32 */
+const BRIDGE=CFG.bridgeUrl||'';
+const TB_ORIGIN=BRIDGE?new URL(BRIDGE).origin:'';
+let lastErr='', bridgeFrame=null, bridgePromise=null, bridgeSeq=0;
+const pending={};
+window.addEventListener('message',ev=>{
+  if(ev.origin!==TB_ORIGIN)return;
+  const m=ev.data;if(!m||m.camlock!==1)return;
+  if(m.ready&&bridgeFrame&&bridgeFrame._resolve){bridgeFrame._resolve(bridgeFrame);bridgeFrame._resolve=null;}
+  if(m.id&&pending[m.id]){pending[m.id](m.res);delete pending[m.id];}
+});
+function bridge(){
+  if(bridgePromise)return bridgePromise;
+  bridgePromise=new Promise((resolve,reject)=>{
+    const f=document.createElement('iframe');
+    f.src=BRIDGE;f.title='ThingsBoard';f.setAttribute('aria-hidden','true');f.tabIndex=-1;
+    f.style.cssText='position:fixed;left:-10000px;top:0;width:400px;height:300px;border:0;opacity:0;pointer-events:none';
+    f._resolve=resolve;bridgeFrame=f;document.body.appendChild(f);
+    setTimeout(()=>{if(f._resolve){f._resolve=null;f.remove();bridgeFrame=null;bridgePromise=null;reject(new Error('เชื่อม ThingsBoard ไม่สำเร็จ ลองรีเฟรชหน้า'));}},45000);
+  });
+  return bridgePromise;
 }
-function saveJwt(){sessionStorage.setItem('cl_jwt',jwt);sessionStorage.setItem('cl_jwtr',jwtRefresh);}
-async function tbFetch(path,opt={},retry=true){
-  if(!jwt)await tbLogin();
-  opt.headers=Object.assign({'Content-Type':'application/json','X-Authorization':'Bearer '+jwt},opt.headers||{});
-  const r=await fetch(TB+path,opt);
-  if(r.status===401&&retry){jwt='';await tbLogin();return tbFetch(path,opt,false);}
-  return r;
+async function tbCall(msg){
+  if(!BRIDGE)return{ok:false,msg:'ยังไม่ได้ตั้งค่า bridgeUrl ใน config.js'};
+  let f;try{f=await bridge();}catch(e){return{ok:false,msg:e.message};}
+  return new Promise(res=>{
+    const id='q'+(++bridgeSeq);
+    const t=setTimeout(()=>{delete pending[id];res({ok:false,msg:'ThingsBoard ไม่ตอบ ลองใหม่อีกครั้ง'});},25000);
+    pending[id]=r=>{clearTimeout(t);res(r||{ok:false,msg:'ไม่มีคำตอบ'});};
+    f.contentWindow.postMessage(Object.assign({camlock:1,id},msg),TB_ORIGIN);
+  });
 }
-// เรียกคำสั่งบนตู้ (ThingsBoard two-way RPC)
+// เรียกคำสั่งบนตู้: แอป → ThingsBoard RPC → MQTT → ESP32
 async function rpc(method,data){
-  if(!CFG.deviceId)return{ok:false,msg:'ยังไม่ได้ตั้งค่า deviceId ใน config.js'};
-  const params=Object.assign({t:token},data||{});
-  try{
-    const r=await tbFetch(`/api/plugins/rpc/twoway/${CFG.deviceId}`,{method:'POST',body:JSON.stringify({method,params,timeout:10000})});
-    if(r.status===408||r.status===504||r.status===409){online=false;return{ok:false,msg:'ตู้ไม่ตอบสนอง (ออฟไลน์หรือกำลังรีสตาร์ท) ลองใหม่อีกครั้ง'};}
-    if(!r.ok){const t=await r.text();return{ok:false,msg:'ThingsBoard ตอบกลับผิดพลาด ('+r.status+') '+t.slice(0,80)};}
-    const j=await r.json();
-    if(j&&j.code===401&&token){logoutLocal('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');}
-    return j;
-  }catch(e){return{ok:false,msg:e.message&&e.message.includes('ThingsBoard')?e.message:'ติดต่อ ThingsBoard ไม่ได้ ตรวจอินเทอร์เน็ต'};}
+  const j=await tbCall({kind:'rpc',method,params:Object.assign({t:token},data||{})});
+  if(j.offline)online=false;
+  if(j&&j.code===401&&token){logoutLocal('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');}
+  return j;
 }
-// สถานะตู้: อ่าน telemetry/attributes ล่าสุดจาก ThingsBoard (ไม่รบกวนตู้)
-const TKEYS='doorOpen,lockActive,alarm,returning,available,camCount,unlockCount,rssi,uptime,heap';
+// สถานะตู้: telemetry/attributes ล่าสุดใน ThingsBoard (ไม่รบกวนตู้)
 async function loadStatus(){
-  if(!CFG.deviceId){online=false;return;}
+  if(!BRIDGE){online=false;return;}
   try{
-    const [rt,ra]=await Promise.all([
-      tbFetch(`/api/plugins/telemetry/DEVICE/${CFG.deviceId}/values/timeseries?keys=${TKEYS}`),
-      tbFetch(`/api/plugins/telemetry/DEVICE/${CFG.deviceId}/values/attributes/CLIENT_SCOPE`)]);
-    if(!rt.ok||!ra.ok){online=false;return;}
-    const t=await rt.json(),a=await ra.json(),A={};
-    a.forEach(x=>A[x.key]=x.value);
+    const j=await tbCall({kind:'status'});
+    if(!j.ok){online=false;lastErr=j.msg;return;}
+    const t=j.timeseries||{},A={};(j.attributes||[]).forEach(x=>A[x.key]=x.value);
     const v=k=>t[k]&&t[k][0]?t[k][0].value:null, b=k=>String(v(k))==='true', n=k=>Number(v(k)||0);
     const ts=Math.max(0,...Object.values(t).map(x=>x&&x[0]?x[0].ts:0));
     online=Date.now()-ts<35000;
@@ -468,6 +475,7 @@ document.addEventListener('click',e=>{
    หน้า: เข้าสู่ระบบ / สมัคร
    ===================================================================== */
 function viewAuth(){
+  if(ui.booting)return `<div class="auth center"><div class="logo">${ic('cam')}</div><h2>CamLock</h2><div class="row" style="justify-content:center;margin-top:14px"><div class="spin"></div><span class="muted sm">กำลังเชื่อม ThingsBoard…</span></div></div>`;
   const reg=ui.authMode==='register';
   return `<div class="auth">
     <div class="logo">${ic('cam')}</div>
@@ -482,8 +490,8 @@ function viewAuth(){
       <button class="btn" style="margin-top:14px" type="submit" id="authBtn">${reg?'สมัครและเข้าสู่ระบบ':'เข้าสู่ระบบ'}</button>
     </form>
     <p class="center sm muted" style="margin-top:16px">${reg?'มีบัญชีแล้ว?':'ยังไม่มีบัญชี?'} <button class="link" data-act="authToggle">${reg?'เข้าสู่ระบบ':'สมัครสมาชิก'}</button></p>
-    ${!CFG.deviceId?`<div class="alert warn" style="margin-top:12px">${ic('alert')}<div>ยังไม่ได้ตั้งค่า <b>config.js</b> (deviceId / บัญชี ThingsBoard) ดู README</div></div>`:''}
-    <p class="foot">${S.locker?esc(S.locker.name+' · '+S.locker.loc)+' · ':''}${online?'ตู้ออนไลน์':'ตู้ออฟไลน์'} · ThingsBoard</p>
+    ${!BRIDGE?`<div class="alert warn" style="margin-top:12px">${ic('alert')}<div>ยังไม่ได้ตั้งค่า <b>bridgeUrl</b> ใน config.js ดู README</div></div>`:(lastErr&&!online?`<div class="alert warn" style="margin-top:12px">${ic('alert')}<div>${esc(lastErr)}</div></div>`:'')}
+    <p class="foot">${S.locker?esc(S.locker.name+' · '+S.locker.loc)+' · '+(online?'ตู้ออนไลน์':'ตู้ออฟไลน์'):'กำลังเชื่อม ThingsBoard…'}</p>
   </div>`;
 }
 
@@ -912,9 +920,10 @@ async function loop(){
 }
 // นาฬิกานับถอยหลังเดินทุกวินาทีโดยไม่ต้องรอ
 async function boot(){
+  ui.booting=!!token;render(true);
   await loadStatus();
   if(token){const j=await loadMe();if(j&&j.ok){await loadAdmin();route={tab:isAdmin()?'a_home':'home',stack:[]};}else if(j&&j.msg&&/เข้าสู่ระบบ/.test(j.msg))logoutLocal();}
-  render(true);loop();
+  ui.booting=false;render(true);loop();
 }
 
 boot();

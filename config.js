@@ -1,18 +1,11 @@
 /* ==================================================================
-   CamLock — ตั้งค่าการเชื่อมต่อ ThingsBoard
-   ดูวิธีหาค่าแต่ละช่องใน README.md หัวข้อ "ตั้งค่า ThingsBoard"
+   CamLock — ตั้งค่าแอป
+   bridgeUrl = ลิงก์สาธารณะของแดชบอร์ด "CamLock Bridge" ใน ThingsBoard
+   (แอปเปิดแดชบอร์ดนี้แบบซ่อนไว้ เพื่อส่งคำสั่งผ่าน ThingsBoard)
+   ไฟล์นี้ไม่มีรหัสผ่านใด ๆ
    ================================================================== */
 window.CAMLOCK_CONFIG = {
-  // เซิร์ฟเวอร์ ThingsBoard
-  tbUrl: 'https://thingsboard.cloud',
-
-  // Device ID ของตู้ (Devices > เลือกอุปกรณ์ > Copy device ID)  ไม่ใช่ Access token
-  deviceId: '',
-
-  // บัญชี Customer user ที่สร้างไว้ให้แอปใช้โดยเฉพาะ (เห็นได้แค่อุปกรณ์ตู้นี้)
-  // ห้ามใช้บัญชี Tenant administrator ของตัวเอง เพราะไฟล์นี้ใครก็เปิดอ่านได้
-  tbUsername: '',
-  tbPassword: '',
+  bridgeUrl: '',
 
   // ลิงก์ของแอป ใช้ทำ QR ติดหน้าตู้
   appUrl: 'https://benharry12.github.io/camlock-app/'
