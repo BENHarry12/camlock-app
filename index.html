@@ -209,7 +209,7 @@ h3{font-size:16px;font-weight:600}
 </div>
 <div class="printqr" id="printqr"></div>
 
-<script src="config.js?v=4"></script>
+<script src="config.js?v=5"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -407,7 +407,7 @@ async function loadStatus(){
     S={fw:A.firmware||'',locker:{name:A.lockerName||'ตู้ '+(A.lockerId||''),loc:A.lockerLoc||'',note:A.lockerNote||''},
       door:b('doorOpen')?'open':'closed',unlocking:b('lockActive'),alarm:b('alarm'),returning:b('returning'),
       available:n('available'),cams:n('camCount'),unlocks:n('unlockCount'),rssi:n('rssi'),uptime:n('uptime'),heap:n('heap'),
-      ssid:A.ssid||'',ip:A.ip||'',promptpay:A.promptpay||'',approve:A.approve!==false,unlockMs:A.unlockMs||3000,epoch:nowS(),lastSeen:ts};
+      ssid:A.ssid||'',ip:A.ip||'',promptpay:A.promptpay||'',approve:A.approve!==false,unlockMs:A.unlockMs||3000,reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts};
   }catch(e){online=false;lastErr=e.message;}
 }
 async function loadMe(){if(!token)return;const j=await rpc('me');if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;}return j;}
@@ -511,7 +511,7 @@ function doorLine(){
   if(!online)return{t:'ตู้ออฟไลน์',c:'warn',i:'wifi',s:S.lastSeen?'ส่งข้อมูลล่าสุด '+tFull(Math.floor(S.lastSeen/1000)):'ยังไม่เคยเชื่อม ThingsBoard'};
   if(S.unlocking)return{t:'กำลังปลดล็อก',c:'ok',i:'unlock',s:'ดึงประตูเปิดได้เลย'};
   if(S.alarm)return{t:'ประตูเปิดค้าง',c:'warn',i:'alert',s:'กรุณาปิดประตูให้สนิท'};
-  if(S.door==='open')return{t:'ประตูเปิดอยู่',c:'amber',i:'door',s:'ปิดประตูให้สนิทเมื่อเสร็จ'};
+  if(S.door==='open')return{t:S.reed===false?'ปลดล็อกอยู่':'ประตูเปิดอยู่',c:'amber',i:'door',s:S.reed===false?'ระบบจะล็อกเองภายใน '+(S.autoClose||10)+' วินาที':'ปิดประตูให้สนิทเมื่อเสร็จ'};
   return{t:'ล็อกอยู่',c:'teal',i:'lock',s:'ประตูปิดสนิท'};
 }
 function lockerHero(){
@@ -618,8 +618,10 @@ VIEWS.open=()=>{
     step('done','ตรวจสิทธิ์การจอง… <b>ผ่าน</b>'),
     step('done','ESP32 รับคำสั่ง → GPIO26 = HIGH'),
     step(unlocking?'now':'done',`กลอนไฟฟ้าเปิด ${(f.ms/1000).toFixed(1)} วินาที`),
-    step(f.sawOpen?'done':(unlocking?'now':'now'),f.sawOpen?'reed switch → <b>ประตูเปิดแล้ว</b>':'รอดึงประตูเปิด…'),
-    step(f.closed?'done':(f.sawOpen?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':ret?'ใส่กล้องเข้าตู้ แล้วปิดประตูให้สนิท':'หยิบกล้องออก แล้วปิดประตูให้สนิท'),
+    S.reed===false
+      ?step(f.sawOpen?'done':'now',f.sawOpen?'ประตู<b>ปลดล็อกแล้ว</b> ดึงเปิดได้เลย':'รอตู้ตอบรับ…')
+      :step(f.sawOpen?'done':(unlocking?'now':'now'),f.sawOpen?'reed switch → <b>ประตูเปิดแล้ว</b>':'รอดึงประตูเปิด…'),
+    step(f.closed?'done':(f.sawOpen?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':(ret?'ใส่กล้องเข้าตู้':'หยิบกล้องออก')+(S.reed===false?` แล้วปิดประตูภายใน <b>${Math.max(0,Math.ceil((S.autoClose||10)-(Date.now()-f.t)/1000))}</b> วินาที ระบบจะล็อกเอง`:' แล้วปิดประตูให้สนิท')),
   ];
   const r=myRentals.find(x=>x.id==f.rid);
   let after='';
