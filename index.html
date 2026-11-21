@@ -209,7 +209,7 @@ h3{font-size:16px;font-weight:600}
 </div>
 <div class="printqr" id="printqr"></div>
 
-<script src="config.js?v=5"></script>
+<script src="config.js?v=6"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -536,7 +536,7 @@ VIEWS.home=()=>{
     </div>
     <div class="card"><div class="door"><div class="ic ${d.c}">${ic(d.i)}</div><div style="flex:1"><div class="muted xs">สถานะตู้ตอนนี้</div><h3>${d.t}</h3><div class="muted sm">${d.s}</div></div><span class="tag ${online?'ok':'warn'}">${online?'ออนไลน์':'ออฟไลน์'}</span></div></div>
     <div class="sec"><h2>วิธีเช่า</h2></div>
-    <div class="card steps"><div>เลือกกล้องและจำนวนชั่วโมง</div><div>สแกนพร้อมเพย์จ่ายค่าเช่า + มัดจำ แล้วกด “ฉันชำระแล้ว”</div><div>ไปที่ตู้ กด “เปิดตู้รับกล้อง” ประตูปลดล็อก ${S.unlockMs?Math.round(S.unlockMs/1000):3} วินาที</div><div>คืนที่ตู้เดิม กด “ไปคืนกล้อง” ใส่กล้อง ปิดประตู เสร็จ</div></div>
+    <div class="card steps"><div>เลือกกล้องและจำนวนชั่วโมง</div><div>สแกนพร้อมเพย์จ่ายค่าเช่า + มัดจำ แล้วกด “ฉันชำระแล้ว”</div><div>ไปที่ตู้ กด “เปิดตู้รับกล้อง” หยิบกล้อง ปิดประตู แล้วกด “ล็อกตู้”</div><div>คืนที่ตู้เดิม กด “ไปคืนกล้อง” ใส่กล้อง ปิดประตู เสร็จ</div></div>
     <p class="foot">CamLock v${esc(S.fw||'')} · ${online?'ตู้ออนไลน์':'ตู้ออฟไลน์'}</p>`;
 };
 
@@ -617,11 +617,11 @@ VIEWS.open=()=>{
     step('done',`ส่งคำสั่ง → ${esc(S.locker?S.locker.name:'ตู้')} รายการ #${f.rid}`),
     step('done','ตรวจสิทธิ์การจอง… <b>ผ่าน</b>'),
     step('done','ESP32 รับคำสั่ง → GPIO26 = HIGH'),
-    step(unlocking?'now':'done',`กลอนไฟฟ้าเปิด ${(f.ms/1000).toFixed(1)} วินาที`),
+    step(unlocking?'now':'done',unlocking?`กลอนเปิดค้าง (ล็อกเองใน <b>${Math.max(0,Math.ceil((f.ms-(Date.now()-f.t))/1000))}</b> วินาที)`:'กลอน → <b>ล็อกแล้ว</b>'),
     S.reed===false
       ?step(f.sawOpen?'done':'now',f.sawOpen?'ประตู<b>ปลดล็อกแล้ว</b> ดึงเปิดได้เลย':'รอตู้ตอบรับ…')
       :step(f.sawOpen?'done':(unlocking?'now':'now'),f.sawOpen?'reed switch → <b>ประตูเปิดแล้ว</b>':'รอดึงประตูเปิด…'),
-    step(f.closed?'done':(f.sawOpen?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':(ret?'ใส่กล้องเข้าตู้':'หยิบกล้องออก')+(S.reed===false?` แล้วปิดประตูภายใน <b>${Math.max(0,Math.ceil((S.autoClose||10)-(Date.now()-f.t)/1000))}</b> วินาที ระบบจะล็อกเอง`:' แล้วปิดประตูให้สนิท')),
+    step(f.closed?'done':(f.sawOpen?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':(ret?'ใส่กล้องเข้าตู้':'หยิบกล้องออก')+' ปิดประตู แล้วกด “ล็อกตู้”'),
   ];
   const r=myRentals.find(x=>x.id==f.rid);
   let after='';
@@ -639,6 +639,7 @@ VIEWS.open=()=>{
     <div class="scan ${isOpen||unlocking?'open':''}"><span class="cn a"></span><span class="cn b"></span><span class="cn c"></span><span class="cn d"></span>${f.closed?'':'<span class="ln"></span>'}
       <div class="lk">${ic(isOpen||unlocking?'unlock':'lock')}</div><div class="cap">${f.closed?'ประตูปิดแล้ว':isOpen?'ประตูเปิดอยู่':unlocking?'ปลดล็อกแล้ว ดึงประตูได้เลย':'ล็อกอยู่'}</div></div>
     <div class="term">${lines.join('')}</div>${after}
+    ${!f.closed&&(unlocking||isOpen)?`<button class="btn amber" data-act="lockNow">${ic('lock')} ${ret?'ใส่กล้องแล้ว':'หยิบกล้องแล้ว'} ล็อกตู้</button>`:''}
     ${f.closed?`<button class="btn" data-act="closeOpen">${ret?'กลับหน้าแรก':'ดูเวลาที่เหลือ'}</button>`:''}`;
 };
 
@@ -795,7 +796,7 @@ VIEWS.a_set=()=>{
     <label class="lb">พร้อมเพย์ของร้าน (เบอร์ 10 หลัก หรือเลขบัตร 13 หลัก)</label><input class="inp" id="sPP" value="${esc(s.promptpay)}" inputmode="numeric" maxlength="17" placeholder="เว้นว่าง = ชำระกับผู้ดูแล">
     <div class="row" style="margin-top:4px"><div class="grow"><b>ผู้ดูแลต้องยืนยันยอดก่อนเปิดตู้</b><div class="xs muted">แนะนำให้เปิดไว้ ระบบไม่สามารถเช็คยอดเข้าบัญชีเองได้</div></div><button class="toggle ${s.approve?'on':''}" id="sApprove" data-act="toggleApprove"></button></div></div>
   <div class="card"><h3 style="margin-bottom:10px">กลอนและประตู</h3>
-    <div class="grid2" style="margin:0"><div><label class="lb">เวลาปลดล็อก (วินาที)</label><input class="inp" id="sUnlock" type="number" min="0.5" max="8" step="0.5" value="${s.unlockMs/1000}"></div>
+    <div class="grid2" style="margin:0"><div><label class="lb">กลอนเปิดค้างสูงสุด (วินาที)</label><input class="inp" id="sUnlock" type="number" min="3" max="60" step="1" value="${s.unlockMs/1000}"></div>
     <div><label class="lb">เตือนประตูเปิดค้าง (วินาที)</label><input class="inp" id="sAlarm" type="number" min="10" max="3600" value="${s.alarmSec}"></div></div></div>
   <button class="btn" data-act="saveSettings">บันทึกการตั้งค่า</button>
   <div class="sec"><h2>บัญชีผู้ดูแล</h2></div>
@@ -831,7 +832,7 @@ ACT.cancelRental=async d=>{if(!await confirmBox('ยกเลิกการจ�
 ACT.openFlow=async(d,b)=>{
   const r=myRentals.find(x=>x.id==d.rid);if(!r)return;
   const ret=r.status==='active';
-  if(ret&&!await confirmBox('คืนกล้อง?',`ตู้จะปลดล็อก ${Math.round((S.unlockMs||3000)/1000)} วินาที ใส่ ${esc(r.camName)} พร้อมอุปกรณ์ครบ แล้วปิดประตูให้สนิท`,'ปลดล็อกเพื่อคืน'))return;
+  if(ret&&!await confirmBox('คืนกล้อง?',`กลอนจะเปิดค้างรอ (สูงสุด ${Math.round((S.unlockMs||30000)/1000)} วินาที) ใส่ ${esc(r.camName)} พร้อมอุปกรณ์ครบ ปิดประตู แล้วกด “ล็อกตู้”`,'ปลดล็อกเพื่อคืน'))return;
   if(!ret&&!await confirmBox('เปิดตู้รับกล้อง?','ยืนยันว่าคุณอยู่หน้าตู้แล้ว เวลาเช่าจะเริ่มนับทันที','เปิดตู้'))return;
   if(b)b.disabled=true;
   const j=await rpc('open',{rid:r.id});
@@ -840,6 +841,7 @@ ACT.openFlow=async(d,b)=>{
   ui.openFlow={rid:r.id,action:j.action,t:Date.now(),ms:j.unlockMs||3000,sawOpen:false,closed:false};
   S.unlocking=true;await loadMe();push('open');
 };
+ACT.lockNow=async(d,b)=>{if(b)b.disabled=true;const j=await rpc('lockNow');if(!j.ok){toast(j.msg);if(b)b.disabled=false;return;}S.unlocking=false;S.door='closed';if(ui.openFlow){ui.openFlow.sawOpen=true;ui.openFlow.closed=true;}toast('ล็อกตู้แล้ว');await loadStatus();await loadMe();softRender();};
 ACT.reopen=async d=>{const r=myRentals.find(x=>x.id==d.rid);const j=await rpc('open',{rid:d.rid});if(!j.ok){toast(j.msg);return;}
   Object.assign(ui.openFlow,{t:Date.now(),action:j.action,sawOpen:false,closed:false});S.unlocking=true;softRender();};
 ACT.closeOpen=async()=>{ui.openFlow=null;await loadMe();go(openRental()?'active':'home');};
