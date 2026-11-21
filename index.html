@@ -195,6 +195,69 @@ h3{font-size:16px;font-weight:600}
 .steps div{display:flex;gap:10px;font-size:13.5px;color:var(--ink2)}
 .steps div::before{counter-increment:s;content:counter(s);width:22px;height:22px;border-radius:50%;background:var(--brandSoft);color:var(--brand);font-weight:700;font-size:12px;display:grid;place-items:center;flex:none}
 .foot{text-align:center;font-size:11.5px;color:var(--ink3);margin-top:18px}
+
+/* ---------- โมเดล 3 มิติ ---------- */
+.stage{position:relative;height:330px;border-radius:22px;background:radial-gradient(circle at 50% 35%,#1B4F56,#0B2A2E 75%);perspective:900px;overflow:hidden;margin-bottom:12px;touch-action:none;cursor:grab;user-select:none}
+.stage.drag{cursor:grabbing}
+.scene{position:absolute;left:58%;top:47%;width:0;height:0;transform-style:preserve-3d;transition:transform .15s}
+.cab3d,.cam3d,.cam3d-in{position:absolute;transform-style:preserve-3d}
+.fc{position:absolute;left:0;top:0;backface-visibility:visible}
+.floor{position:absolute;width:300px;height:300px;margin:-150px 0 0 -150px;transform:translateY(112px) rotateX(90deg);background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);}
+.cab-back{background:linear-gradient(#24484D,#1A383C)}
+.cab-side{background:linear-gradient(160deg,#4E8C93,#2F6268);box-shadow:inset 0 0 0 2px rgba(255,255,255,.06)}
+.cab-top{background:linear-gradient(#6AAAB0,#4B8A90)}
+.cab-bottom{background:#1E3E42}
+.cab-shelf{background:linear-gradient(#3A6F75,#2B575C);box-shadow:inset 0 0 0 2px rgba(0,0,0,.15)}
+.cab-strike{background:#8FA3A6;border-radius:2px}
+.bolt{position:absolute;left:-14px;top:9px;width:18px;height:8px;border-radius:2px;background:linear-gradient(#E9EEF0,#9AA9AC);transition:transform .25s}
+.scene.unlocked .bolt{transform:translateX(12px)}
+.door3d{position:absolute;transform-style:preserve-3d;transform:translateZ(75px);transition:transform 1.1s cubic-bezier(.3,.7,.2,1)}
+.scene.ajar .door3d{transform:translateZ(75px) rotateY(-14deg)}
+.scene.dopen .door3d{transform:translateZ(75px) rotateY(-112deg)}
+.door-front{background:linear-gradient(150deg,#5FA2A9 0%,#3D7B82 55%,#336A70 100%);border-radius:4px;box-shadow:inset 0 0 0 3px rgba(255,255,255,.08),inset 0 -40px 60px rgba(0,0,0,.12);transform:translateZ(1px)}
+.door-back{background:linear-gradient(#2F6167,#24494E);transform:rotateY(180deg) translateZ(1px);border-radius:4px}
+.tag-a{position:absolute;left:14px;top:12px;width:30px;height:30px;border-radius:8px;background:#F2A541;color:#0E1A20;font:700 16px var(--fd);display:grid;place-items:center}
+.door-led{position:absolute;right:16px;top:20px;width:9px;height:9px;border-radius:50%;background:#E5484D;box-shadow:0 0 10px #E5484D}
+.scene.unlocked .door-led{background:#3DDC84;box-shadow:0 0 12px #3DDC84}
+.handle{position:absolute;right:12px;top:50%;width:8px;height:56px;margin-top:-28px;border-radius:4px;background:linear-gradient(90deg,#DDE5E7,#9AAAAD);box-shadow:-2px 0 4px rgba(0,0,0,.25)}
+.vent{position:absolute;left:14px;right:34px;bottom:16px;height:18px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 3px,transparent 3px 8px);border-radius:3px}
+.qr-sticker{position:absolute;left:50%;top:58px;width:64px;height:64px;margin-left:-32px;background:#fff;border-radius:6px;padding:3px}
+.qr-sticker svg{width:100%;height:100%;display:block}
+.sol{position:absolute;left:8px;top:50%;width:26px;height:16px;margin-top:-8px;border-radius:3px;background:#B8C3C5}
+.plunger{position:absolute;left:-10px;top:5px;width:12px;height:6px;background:#E3E9EA;border-radius:2px;transition:transform .25s}
+.scene.unlocked .plunger{transform:translateX(8px)}
+.cb-front,.cb-back,.cb-left,.cb-right,.cb-top,.cb-bottom{background:#2A2F33;border-radius:5px}
+.cb-front{background:linear-gradient(#3A4146,#24292D)}
+.cb-top{background:#454D52}
+.cb-grip{background:#1D2124;border-radius:6px}
+.lens{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -12px;border-radius:50%;background:radial-gradient(circle,#4FA3D1 0 18%,#123 22% 55%,#555 58% 70%,#222 72%);box-shadow:0 0 0 3px #111}
+.flash{position:absolute;right:8px;top:6px;width:10px;height:6px;border-radius:2px;background:#C9D2D6}
+.shutter{position:absolute;right:12px;top:10px;width:10px;height:10px;border-radius:50%;background:#C0392B}
+.cam3d{transition:transform .9s cubic-bezier(.3,.7,.2,1),opacity .6s;transform:translate3d(0,0,0);opacity:1}
+.scene:not(.has-cam) .cam3d{transform:translate3d(0,-10px,170px);opacity:0}
+.pcb{position:absolute;left:14px;top:40px;width:120px;height:86px;background:#1F6B3E;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),0 2px 6px rgba(0,0,0,.4);transform:translateZ(2px)}
+.pcb-t{position:absolute;left:6px;bottom:4px;font:600 6.5px var(--fn);color:#D7F5E1;letter-spacing:.3px}
+.esp{position:absolute;left:8px;top:8px;width:50px;height:36px;border-radius:3px;background:#2B2F33;box-shadow:inset 0 0 0 2px #8D979C}
+.esp i,.relay i{position:absolute;inset:0;display:grid;place-items:center;font:700 7px var(--fn);color:#E8EEF0;font-style:normal}
+.relay{position:absolute;right:8px;top:8px;width:40px;height:30px;border-radius:3px;background:#1E5BB8}
+.reg{position:absolute;left:8px;top:50px;width:24px;height:14px;background:#111;color:#9aa;font:6px var(--fn);display:grid;place-items:center}
+.led{position:absolute;top:52px;width:7px;height:7px;border-radius:50%;background:#333}
+.led.pwr{left:44px;background:#3DDC84;box-shadow:0 0 6px #3DDC84}
+.led.sts{left:68px}.scene.online .led.sts{background:#4FA3FF;box-shadow:0 0 6px #4FA3FF;animation:blink 1.4s infinite}
+.led.rly{left:92px}.scene.unlocked .led.rly{background:#FF5A4F;box-shadow:0 0 8px #FF5A4F}
+.lbl{position:absolute;top:61px;font:600 5.5px var(--fn);color:#CFEFDA}.lbl.l1{left:40px}.lbl.l2{left:60px}.lbl.l3{left:88px}
+@keyframes blink{50%{opacity:.35}}
+.cap3d{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;align-items:center;gap:6px;color:#DDF3F3;font-size:13.5px;font-weight:600}
+.cap3d svg{width:16px;height:16px}
+.hint3d{position:absolute;right:12px;top:10px;font-size:11px;color:rgba(255,255,255,.45)}
+.vstep{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.vstep:last-child{border-bottom:0}
+.vnum{width:30px;height:30px;border-radius:50%;background:var(--brandSoft);color:var(--brand);font-weight:700;display:grid;place-items:center;flex:none}
+.vstep.done .vnum{background:var(--okSoft);color:var(--ok)}
+.vthumb{display:block;margin-top:8px;max-width:140px;max-height:100px;border-radius:10px;box-shadow:var(--sh)}
+.vimg{aspect-ratio:3/4;background:var(--surf2);border-radius:12px;display:grid;place-items:center;overflow:hidden;margin:4px 0 10px}
+.vimg img{width:100%;height:100%;object-fit:cover}
+label.btn input{display:none}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
@@ -209,7 +272,7 @@ h3{font-size:16px;font-weight:600}
 </div>
 <div class="printqr" id="printqr"></div>
 
-<script src="config.js?v=6"></script>
+<script src="config.js?v=7"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -446,8 +509,9 @@ function renderTabs(){
   nav.classList.remove('hide');
   const tabs=isAdmin()?ADMIN_TABS:USER_TABS;
   const pendingCount=isAdmin()?AD.rentals.filter(r=>r.status==='verify'||(r.notified&&r.paid<r.amount)).length:0;
+  const idCount=isAdmin()?AD.users.filter(u=>u.verify==='pending').length:0;
   const hasOpen=!isAdmin()&&openRental();
-  nav.innerHTML=tabs.map(([k,l,i])=>`<button class="${route.tab===k?'on':''}" data-go="${k}">${ic(i)}${(k==='a_rent'&&pendingCount)?`<span class="badge">${pendingCount}</span>`:''}${(k==='active'&&hasOpen)?'<span class="badge">1</span>':''}${l}</button>`).join('');
+  nav.innerHTML=tabs.map(([k,l,i])=>`<button class="${route.tab===k?'on':''}" data-go="${k}">${ic(i)}${(k==='a_rent'&&pendingCount)?`<span class="badge">${pendingCount}</span>`:''}${(k==='a_users'&&idCount)?`<span class="badge">${idCount}</span>`:''}${(k==='active'&&hasOpen)?'<span class="badge">1</span>':''}${l}</button>`).join('');
 }
 
 function render(scrollTop){
@@ -462,6 +526,7 @@ function render(scrollTop){
 }
 // อัปเดตหน้าที่แสดงข้อมูลสด โดยไม่รบกวนตอนกำลังพิมพ์
 function softRender(){
+  if(cur().name==='open'&&$('#scene3d')){updateOpen();renderTabs();return;}
   const a=document.activeElement;
   if(a&&(a.tagName==='INPUT'||a.tagName==='SELECT'||a.tagName==='TEXTAREA')&&$('#v').contains(a))return;
   if($('#sheet').classList.contains('on'))return;
@@ -482,11 +547,12 @@ function viewAuth(){
   return `<div class="auth">
     <div class="logo">${ic('cam')}</div>
     <h1 class="center">${reg?'สมัครสมาชิก':'ยินดีต้อนรับ'}</h1>
-    <p class="center muted sm" style="margin:4px 0 22px">${reg?'ใช้รหัสนักศึกษาเป็นชื่อผู้ใช้':'เข้าสู่ระบบเพื่อเช่ากล้องจากตู้อัตโนมัติ'}</p>
+    <p class="center muted sm" style="margin:4px 0 22px">${reg?'ตั้งชื่อผู้ใช้สำหรับเข้าสู่ระบบ':'เข้าสู่ระบบเพื่อเช่ากล้องจากตู้อัตโนมัติ'}</p>
     <form id="authForm" autocomplete="on">
-      <div class="field"><div class="ic">${ic('user')}</div><div class="grow" style="flex:1"><label>รหัสนักศึกษา</label><input name="sid" autocomplete="username" inputmode="text" required maxlength="15" placeholder="เช่น 6612345678"></div></div>
+      <div class="field"><div class="ic">${ic('user')}</div><div class="grow" style="flex:1"><label>ชื่อผู้ใช้${reg?' (อังกฤษ/ตัวเลข 3–15 ตัว)':''}</label><input name="sid" autocomplete="username" autocapitalize="none" spellcheck="false" required maxlength="15" pattern="[A-Za-z0-9_\-]{3,15}" placeholder="เช่น panuwat"></div></div>
       ${reg?`<div class="field"><div class="ic">${ic('id')}</div><div style="flex:1"><label>ชื่อ-นามสกุล</label><input name="name" required maxlength="40" placeholder="ภานุวัฒน์ ลิ้มประยูร"></div></div>
-      <div class="field"><div class="ic">${ic('phone')}</div><div style="flex:1"><label>เบอร์โทร</label><input name="phone" type="tel" inputmode="tel" required maxlength="15" placeholder="08x-xxx-xxxx"></div></div>`:''}
+      <div class="field"><div class="ic">${ic('phone')}</div><div style="flex:1"><label>เบอร์โทร</label><input name="phone" type="tel" inputmode="tel" required maxlength="15" placeholder="08x-xxx-xxxx"></div></div>
+      <div class="field"><div class="ic">${ic('id')}</div><div style="flex:1"><label>รหัสนักศึกษา (ไม่บังคับ)</label><input name="studentId" inputmode="numeric" maxlength="15" placeholder="เช่น 68019652"></div></div>`:''}
       <div class="field"><div class="ic">${ic('lock')}</div><div style="flex:1"><label>รหัสผ่าน${reg?' (อย่างน้อย 6 ตัว)':''}</label><input name="pass" type="password" autocomplete="${reg?'new-password':'current-password'}" required minlength="${reg?6:1}"></div></div>
       ${reg?`<div class="field"><div class="ic">${ic('lock')}</div><div style="flex:1"><label>ยืนยันรหัสผ่าน</label><input name="pass2" type="password" autocomplete="new-password" required></div></div>`:''}
       <button class="btn" style="margin-top:14px" type="submit" id="authBtn">${reg?'สมัครและเข้าสู่ระบบ':'เข้าสู่ระบบ'}</button>
@@ -500,6 +566,7 @@ function viewAuth(){
 /* =====================================================================
    หน้า: ผู้ใช้
    ===================================================================== */
+const VF={ok:['ยืนยันแล้ว','ok'],pending:['รอตรวจ','amber'],rejected:['ไม่ผ่าน','warn'],none:['ยังไม่ยืนยัน','warn'],undefined:['ยืนยันแล้ว','ok']};
 const ST={await:['รอชำระเงิน','amber'],verify:['รอตรวจสอบการชำระ','amber'],ready:['พร้อมรับกล้อง','teal'],active:['กำลังเช่า','teal'],returned:['คืนแล้ว','ok'],cancelled:['ยกเลิก','grey']};
 const isLate=r=>r.status==='active'&&r.due&&nowS()>r.due;
 const owed=r=>Math.max(0,r.amount-r.paid);
@@ -528,10 +595,11 @@ VIEWS.home=()=>{
   const done=myRentals.filter(x=>x.status==='returned'||x.status==='active').length;
   let cta=`<button class="cta" data-go="rent"><span class="ic">${ic('cam')}</span><span style="flex:1"><b>เช่ากล้อง</b><span>เลือกกล้องแล้วรับที่ตู้ได้ทันที</span></span>${ic('chev')}</button>`;
   if(r){const s=ST[r.status];cta=`<button class="cta amber" data-go="active"><span class="ic">${ic(r.status==='active'?'bolt':r.status==='ready'?'unlock':'wallet')}</span><span style="flex:1"><b>${r.status==='active'?(isLate(r)?'เกินกำหนดคืนแล้ว!':'เหลืออีก '+dur(r.due-nowS())):s[0]}</b><span>${esc(r.camName)} · แตะเพื่อดูรายละเอียด</span></span>${ic('chev')}</button>`;}
+  if(!r&&me.verify!=='ok'&&!me.admin)cta=`<button class="cta amber" data-go="verify"><span class="ic">${ic('shield')}</span><span style="flex:1"><b>${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนก่อนเช่า'}</b><span>${me.verify==='pending'?'ผู้ดูแลกำลังตรวจรูปของคุณ':me.verify==='rejected'?'ไม่ผ่าน กรุณาส่งรูปใหม่':'ถ่ายรูปบัตรและรูปหน้า ทำครั้งเดียว'}</span></span>${ic('chev')}</button>`;
   return `<div class="top"><div class="grow"><div class="hello">${greet()}</div><h1>${esc(firstName())}</h1></div><button class="iconbtn" data-act="refresh" title="รีเฟรช">${ic('refresh')}</button></div>
     ${lockerHero()}${cta}
     <div class="grid2">
-      <div class="tile"><div class="ic ok">${ic('shield')}</div><div class="k">สถานะบัญชี</div><div class="v">${me.disabled?'ถูกระงับ':'ใช้งานได้'}</div></div>
+      <div class="tile" data-go="verify" style="cursor:pointer"><div class="ic ${VF[me.verify][1]}">${ic('shield')}</div><div class="k">สถานะบัญชี</div><div class="v">${me.disabled?'ถูกระงับ':VF[me.verify][0]}</div></div>
       <div class="tile"><div class="ic amber">${ic('clock')}</div><div class="k">เช่าทั้งหมด</div><div class="v">${done} ครั้ง</div></div>
     </div>
     <div class="card"><div class="door"><div class="ic ${d.c}">${ic(d.i)}</div><div style="flex:1"><div class="muted xs">สถานะตู้ตอนนี้</div><h3>${d.t}</h3><div class="muted sm">${d.s}</div></div><span class="tag ${online?'ok':'warn'}">${online?'ออนไลน์':'ออฟไลน์'}</span></div></div>
@@ -570,7 +638,7 @@ VIEWS.camDetail=p=>{
       <div class="kv"><span>ค่ามัดจำ (ได้คืนหลังคืนกล้อง)</span><b>${baht(c.deposit)} ฿</b></div>
       <div class="total"><span>ชำระตอนนี้</span><b>${baht(rent+c.deposit)} ฿</b></div>
       <p class="xs muted" style="margin:10px 0 0">ค่ามัดจำจะคืนให้เมื่อคืนกล้องและผู้ดูแลตรวจสภาพผ่าน คืนช้าเกิน 10 นาทีคิดค่าปรับชั่วโมงละ ${baht(c.price)} ฿ หักจากมัดจำ</p></div>
-    <button class="btn" data-act="doRent" data-id="${c.id}">จองและไปชำระเงิน</button>`;
+    ${me.verify==='ok'||me.admin?`<button class="btn" data-act="doRent" data-id="${c.id}">จองและไปชำระเงิน</button>`:`<button class="btn amber" data-go="verify">${ic('shield')} ${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนเพื่อจอง'}</button>`}`;
 };
 
 function payBlock(r){
@@ -605,22 +673,68 @@ VIEWS.pay=p=>{
 };
 
 // หน้าเปิดตู้ (ติดตามสถานะจริงจากตู้)
+/* ---------- หน้าเปิดตู้: โมเดล 3 มิติจำลองตู้จริง ----------
+   สร้างฉากครั้งเดียว แล้วอัปเดตแค่ class/ข้อความ เพื่อให้แอนิเมชันประตูลื่น */
+function box3d(w,h,d,cls,faces={}){
+  const F=(n,fw,fh,tr)=>`<div class="fc ${cls}-${n}" style="width:${fw}px;height:${fh}px;margin:${-fh/2}px 0 0 ${-fw/2}px;transform:${tr}">${faces[n]||''}</div>`;
+  return F('front',w,h,`translateZ(${d/2}px)`)+F('back',w,h,`rotateY(180deg) translateZ(${d/2}px)`)+
+    F('left',d,h,`rotateY(-90deg) translateZ(${w/2}px)`)+F('right',d,h,`rotateY(90deg) translateZ(${w/2}px)`)+
+    F('top',w,d,`rotateX(90deg) translateZ(${h/2}px)`)+F('bottom',w,d,`rotateX(-90deg) translateZ(${h/2}px)`);
+}
+function lockerScene(){
+  const W=176,H=220,D=150;
+  const pcb=`<div class="pcb"><span class="pcb-t">CAMERA LOCKER v1.0</span>
+    <div class="esp"><i>ESP32</i></div><div class="relay"><i>RELAY</i></div><div class="reg">5V</div>
+    <span class="led pwr"></span><span class="led sts"></span><span class="led rly"></span>
+    <span class="lbl l1">PWR</span><span class="lbl l2">STATUS</span><span class="lbl l3">LOCK</span></div>`;
+  const cab=`<div class="fc cab-back" style="width:${W}px;height:${H}px;margin:${-H/2}px 0 0 ${-W/2}px;transform:translateZ(${-D/2}px)"></div>
+    <div class="fc cab-side" style="width:${D}px;height:${H}px;margin:${-H/2}px 0 0 ${-D/2}px;transform:rotateY(-90deg) translateZ(${W/2}px)"></div>
+    <div class="fc cab-side" style="width:${D}px;height:${H}px;margin:${-H/2}px 0 0 ${-D/2}px;transform:rotateY(90deg) translateZ(${W/2}px)">${pcb}</div>
+    <div class="fc cab-top" style="width:${W}px;height:${D}px;margin:${-D/2}px 0 0 ${-W/2}px;transform:rotateX(90deg) translateZ(${H/2}px)"></div>
+    <div class="fc cab-bottom" style="width:${W}px;height:${D}px;margin:${-D/2}px 0 0 ${-W/2}px;transform:rotateX(-90deg) translateZ(${H/2}px)"></div>
+    <div class="fc cab-shelf" style="width:${W-6}px;height:${D-6}px;margin:${-(D-6)/2}px 0 0 ${-(W-6)/2}px;transform:rotateX(-90deg) translateZ(28px)"></div>
+    <div class="fc cab-strike" style="width:10px;height:26px;margin:-13px 0 0 -5px;transform:translate3d(${W/2-6}px,0,${D/2-6}px)"><i class="bolt"></i></div>`;
+  const cam=`<div class="cam3d"><div class="cam3d-in" style="transform:translate3d(0,${28-23}px,0)">${box3d(78,46,40,'cb',{front:'<i class="lens"><i></i></i><i class="flash"></i>',top:'<i class="shutter"></i>'})}<div class="fc cb-grip" style="width:18px;height:46px;margin:-23px 0 0 -9px;transform:translate3d(-30px,0,23px)"></div></div></div>`;
+  const door=`<div class="door3d" style="width:${W}px;height:${H}px;margin:${-H/2}px 0 0 ${-W/2}px;transform-origin:0 50%">
+      <div class="fc door-front" style="width:${W}px;height:${H}px"><span class="tag-a">A</span><span class="door-led"></span><span class="handle"></span>
+        <span class="vent"></span><span class="qr-sticker">${(()=>{try{return QR.svg(appUrl())}catch(e){return''}})()}</span></div>
+      <div class="fc door-back" style="width:${W}px;height:${H}px"><span class="sol"><i class="plunger"></i></span></div>
+    </div>`;
+  return `<div class="stage" id="stage3d"><div class="scene" id="scene3d" style="--W:${W}px;--D:${D}px">
+      <div class="floor"></div><div class="cab3d">${cab}${cam}${door}</div></div>
+    <div class="cap3d" id="cap3d"></div><div class="hint3d">ลากเพื่อหมุนดู</div></div>`;
+}
 VIEWS.open=()=>{
   const f=ui.openFlow;if(!f)return VIEWS.active();
   const ret=f.action==='return';
+  return `<div class="back"><button data-act="closeOpen">${ic('left')}</button><h2>${ret?'คืนกล้อง':'เปิดตู้'}</h2></div>
+    <p class="sm muted" style="margin:0 0 12px">${esc(S.locker?S.locker.name+' · '+S.locker.loc:'')} · จำลองตามสถานะจริงของตู้</p>
+    ${lockerScene()}<div id="openDyn"></div>`;
+};
+function updateOpen(){
+  const f=ui.openFlow, sc=$('#scene3d');if(!f||!sc)return;
+  const ret=f.action==='return';
   const unlocking=S.unlocking, isOpen=S.door==='open';
-  if(isOpen)f.sawOpen=true;
-  if(f.sawOpen&&!isOpen)f.closed=true;
+  if(isOpen&&!f.sawOpen){f.sawOpen=true;f.openAt=Date.now();}
+  if(f.sawOpen&&!isOpen&&!unlocking)f.closed=true;
+  const since=f.openAt?Date.now()-f.openAt:0;
+  // กล้อง: รับ = อยู่ในตู้แล้วถูกหยิบออก / คืน = ถูกใส่เข้าไป
+  const camIn=ret?(f.closed||(f.sawOpen&&since>2500)):!(f.closed||(f.sawOpen&&since>3500));
+  sc.classList.toggle('unlocked',!!unlocking);
+  sc.classList.toggle('dopen',isOpen&&!f.closed);
+  sc.classList.toggle('ajar',!!unlocking&&!isOpen);
+  sc.classList.toggle('has-cam',camIn);
+  sc.classList.toggle('online',online);
+  const left=Math.max(0,Math.ceil((f.ms-(Date.now()-f.t))/1000));
+  $('#cap3d').innerHTML=f.closed?`${ic('lock')} ประตูปิด · ล็อกแล้ว`:unlocking?`${ic('unlock')} ปลดล็อกอยู่ · ล็อกเองใน ${left} วิ`:isOpen?`${ic('door')} ประตูเปิด`:`${ic('lock')} ล็อกอยู่`;
   const step=(state,txt)=>`<div class="s ${state}"><span class="m">${state==='done'?'✓':state==='now'?'›':'·'}</span><span>${txt}</span></div>`;
-  const st=c=>c?'done':'wait';
-  let lines=[
-    step('done',`ส่งคำสั่ง → ${esc(S.locker?S.locker.name:'ตู้')} รายการ #${f.rid}`),
-    step('done','ตรวจสิทธิ์การจอง… <b>ผ่าน</b>'),
-    step('done','ESP32 รับคำสั่ง → GPIO26 = HIGH'),
-    step(unlocking?'now':'done',unlocking?`กลอนเปิดค้าง (ล็อกเองใน <b>${Math.max(0,Math.ceil((f.ms-(Date.now()-f.t))/1000))}</b> วินาที)`:'กลอน → <b>ล็อกแล้ว</b>'),
+  const lines=[
+    step('done',`ส่งคำสั่ง → ThingsBoard → ${esc(S.locker?S.locker.name:'ตู้')} (#${f.rid})`),
+    step('done','ESP32 ตรวจสิทธิ์ผ่าน → GPIO26 = HIGH → รีเลย์ทำงาน'),
+    step(unlocking?'now':'done',unlocking?`กลอนเปิดค้าง (ล็อกเองใน <b>${left}</b> วินาที)`:'กลอน → <b>ล็อกแล้ว</b>'),
     S.reed===false
       ?step(f.sawOpen?'done':'now',f.sawOpen?'ประตู<b>ปลดล็อกแล้ว</b> ดึงเปิดได้เลย':'รอตู้ตอบรับ…')
-      :step(f.sawOpen?'done':(unlocking?'now':'now'),f.sawOpen?'reed switch → <b>ประตูเปิดแล้ว</b>':'รอดึงประตูเปิด…'),
+      :step(f.sawOpen?'done':'now',f.sawOpen?'reed switch → <b>ประตูเปิดแล้ว</b>':'รอดึงประตูเปิด…'),
     step(f.closed?'done':(f.sawOpen?'now':'wait'),f.closed?'ประตูปิด → <b>ล็อกแล้ว</b>':(ret?'ใส่กล้องเข้าตู้':'หยิบกล้องออก')+' ปิดประตู แล้วกด “ล็อกตู้”'),
   ];
   const r=myRentals.find(x=>x.id==f.rid);
@@ -631,16 +745,22 @@ VIEWS.open=()=>{
         :`<div class="card row"><div class="spin"></div><div>กำลังบันทึกการคืน…</div></div>`;
     }else after=`<div class="alert ok">${ic('check')}<div><b>รับกล้องเรียบร้อย</b><br>คืนก่อน ${r?tFull(r.due):'-'}</div></div>`;
   }else if(!unlocking&&!f.sawOpen&&Date.now()-f.t>f.ms+1500){
-    after=`<div class="alert amber">${ic('info')}<div>กลอนล็อกกลับแล้วแต่ประตูยังไม่ถูกเปิด ${ret?'กดเปิดอีกครั้งได้':'กดเปิดอีกครั้งได้ (การเช่าเริ่มนับเวลาแล้ว)'}</div></div>
+    after=`<div class="alert amber">${ic('info')}<div>กลอนล็อกกลับแล้วแต่ประตูยังไม่ถูกเปิด กดปลดล็อกอีกครั้งได้</div></div>
       <button class="btn ghost" data-act="reopen" data-rid="${f.rid}">${ic('unlock')} ปลดล็อกอีกครั้ง</button>`;
   }
-  return `<div class="back"><button data-act="closeOpen">${ic('left')}</button><h2>${ret?'คืนกล้อง':'เปิดตู้'}</h2></div>
-    <p class="sm muted" style="margin:0 0 12px">${esc(S.locker?S.locker.name+' · '+S.locker.loc:'')}</p>
-    <div class="scan ${isOpen||unlocking?'open':''}"><span class="cn a"></span><span class="cn b"></span><span class="cn c"></span><span class="cn d"></span>${f.closed?'':'<span class="ln"></span>'}
-      <div class="lk">${ic(isOpen||unlocking?'unlock':'lock')}</div><div class="cap">${f.closed?'ประตูปิดแล้ว':isOpen?'ประตูเปิดอยู่':unlocking?'ปลดล็อกแล้ว ดึงประตูได้เลย':'ล็อกอยู่'}</div></div>
-    <div class="term">${lines.join('')}</div>${after}
+  const html=`<div class="term">${lines.join('')}</div>${after}
     ${!f.closed&&(unlocking||isOpen)?`<button class="btn amber" data-act="lockNow">${ic('lock')} ${ret?'ใส่กล้องแล้ว':'หยิบกล้องแล้ว'} ล็อกตู้</button>`:''}
     ${f.closed?`<button class="btn" data-act="closeOpen">${ret?'กลับหน้าแรก':'ดูเวลาที่เหลือ'}</button>`:''}`;
+  const dyn=$('#openDyn');if(dyn.dataset.h!==html){dyn.innerHTML=html;dyn.dataset.h=html;}
+}
+AFTER.open=()=>{
+  updateOpen();
+  const st=$('#stage3d'),sc=$('#scene3d');if(!st)return;
+  let rx=-14,ry=-32,drag=null;
+  const apply=()=>{sc.style.transform=`scale(.86) rotateX(${rx}deg) rotateY(${ry}deg)`;};apply();
+  st.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,rx,ry};st.setPointerCapture(e.pointerId);st.classList.add('drag');};
+  st.onpointermove=e=>{if(!drag)return;ry=drag.ry+(e.clientX-drag.x)*0.5;rx=Math.max(-50,Math.min(20,drag.rx-(e.clientY-drag.y)*0.3));apply();};
+  st.onpointerup=st.onpointercancel=()=>{drag=null;st.classList.remove('drag');};
 };
 
 VIEWS.active=()=>{
@@ -699,13 +819,47 @@ VIEWS.history=()=>{
     ${listHtml||`<div class="card empty"><div class="ic teal">${ic('clock')}</div>ยังไม่มีประวัติการเช่า</div>`}`;
 };
 
+VIEWS.verify=()=>{
+  const v=me.verify, P=ui.vphoto||(ui.vphoto={});
+  const head=`<div class="back"><button data-act="back">${ic('left')}</button><h2>ยืนยันตัวตน</h2></div>
+    <p class="sm muted" style="margin:0 0 14px">ทำครั้งเดียว ใช้ได้ตลอด เพราะกล้องมีค่ามัดจำหลักพัน</p>`;
+  if(v==='ok'||me.admin)return head+`<div class="card center" style="padding:26px 16px"><div class="ic ok" style="width:66px;height:66px;border-radius:22px;display:grid;place-items:center;margin:0 auto 10px">${ic('shield')}</div><h3>ยืนยันตัวตนแล้ว</h3><p class="sm muted" style="margin:4px 0 0">${esc(me.name)} · ${esc(me.sid)}${me.studentId?' · '+esc(me.studentId):''}</p></div><button class="btn" data-go="rent">เลือกกล้อง</button>`;
+  if(v==='pending')return head+`<div class="card row"><div class="spin"></div><div class="grow"><h3>รอผู้ดูแลตรวจ</h3><div class="sm muted">ส่งรูปบัตรและรูปหน้าแล้ว หน้านี้จะอัปเดตเอง</div></div></div>
+    <div class="steps card"><div>ถ่ายรูปบัตรนักศึกษา / บัตรประชาชน <span class="tag ok">ส่งแล้ว</span></div><div>ถ่ายรูปหน้าตัวเอง <span class="tag ok">ส่งแล้ว</span></div><div>ผู้ดูแลเทียบหน้ากับรูปบนบัตร <span class="tag amber">กำลังตรวจ</span></div></div>`;
+  const item=(k,n,title,sub,cap)=>`<div class="vstep ${P[k]?'done':''}"><div class="vnum">${P[k]?ic('check'):n}</div><div style="flex:1;min-width:0"><b>${title}</b><div class="xs muted">${sub}</div>
+      ${P[k]?`<img class="vthumb" src="${P[k]}" alt="">`:''}</div>
+      <label class="btn sm ${P[k]?'ghost':''}" style="flex:none">${P[k]?'ถ่ายใหม่':'ถ่ายรูป'}<input type="file" accept="image/*" capture="${cap}" data-vk="${k}" hidden></label></div>`;
+  return head+(v==='rejected'?`<div class="alert warn">${ic('alert')}<div>การยืนยันครั้งก่อนไม่ผ่าน กรุณาถ่ายรูปให้ชัด เห็นชื่อและรูปบนบัตร</div></div>`:'')+
+    `<div class="card" style="padding:6px 16px">
+      ${item('id',1,'ถ่ายรูปบัตรนักศึกษา / บัตรประชาชน','ให้เห็นชื่อและรูปบนบัตรชัด ๆ','environment')}
+      ${item('selfie',2,'ถ่ายรูปหน้าตัวเอง','ผู้ดูแลจะเทียบกับรูปบนบัตร กันคนอื่นเอาบัตรมาใช้','user')}
+      <div class="vstep"><div class="vnum">3</div><div style="flex:1"><b>รหัสนักศึกษา</b><div class="xs muted">ไม่บังคับ ช่วยให้ผู้ดูแลตรวจเร็วขึ้น</div>
+        <input class="inp" id="vStu" style="margin:8px 0 0" inputmode="numeric" maxlength="15" value="${esc(me.studentId||'')}" placeholder="เช่น 68019652"></div></div>
+    </div>
+    <button class="btn" data-act="verifySubmit" ${P.id&&P.selfie?'':'disabled'}>ส่งให้ผู้ดูแลตรวจ</button>
+    <p class="xs muted center" style="margin-top:10px">รูปเก็บไว้ในตู้เท่านั้น และถูกลบทันทีหลังผู้ดูแลตรวจเสร็จ</p>`;
+};
+// ย่อรูปให้เล็กพอส่งผ่าน ThingsBoard (< 19KB)
+function shrinkImage(file){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{
+  let max=520,q=.7,out='';
+  for(let i=0;i<8;i++){const sc=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*sc);c.height=Math.round(img.height*sc);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<19000)break;q=Math.max(.35,q-.1);max=Math.round(max*.82);}
+  URL.revokeObjectURL(img.src);out.length<19500?res(out):rej(new Error('รูปใหญ่เกินไป'));};img.onerror=()=>rej(new Error('อ่านรูปไม่ได้'));img.src=URL.createObjectURL(file);});}
+document.addEventListener('change',async e=>{
+  const k=e.target.dataset&&e.target.dataset.vk;if(!k||!e.target.files[0])return;
+  try{toast('กำลังอัปโหลดรูป…');const data=await shrinkImage(e.target.files[0]);
+    const j=await rpc('verifyUpload',{kind:k,img:data});if(!j.ok){toast(j.msg);return;}
+    (ui.vphoto=ui.vphoto||{})[k]=data;render(false);toast('อัปโหลดแล้ว');}catch(err){toast(err.message);}
+});
+
 VIEWS.account=()=>{
   const ini=(me.name||me.sid).split(' ').map(s=>s[0]).join('').slice(0,2);
   return `<div class="top"><div class="grow"><div class="hello">บัญชี</div><h1>โปรไฟล์</h1></div></div>
-    <div class="card row"><div class="av">${esc(ini)}</div><div class="grow"><h3>${esc(me.name)}</h3><div class="sm muted">${esc(me.sid)} · ${esc(me.phone||'')}</div></div><span class="tag ok">ใช้งานได้</span></div>
+    <div class="card row"><div class="av">${esc(ini)}</div><div class="grow"><h3>${esc(me.name)}</h3><div class="sm muted">${esc(me.sid)} · ${esc(me.phone||'')}</div></div><span class="tag ${VF[me.verify][1]}">${VF[me.verify][0]}</span></div>
     <div class="sec"><h2>บัญชีและความปลอดภัย</h2></div>
     <div class="card menu" style="padding:4px 16px">
-      <button class="it" data-act="pwSheet"><span class="ic teal">${ic('key')}</span><span style="flex:1"><b>เปลี่ยนรหัสผ่าน</b><div class="xs muted">ใช้เข้าสู่ระบบด้วยรหัสนักศึกษา</div></span>${ic('chev')}</button>
+      <button class="it" data-go="verify"><span class="ic ${VF[me.verify][1]}">${ic('shield')}</span><span style="flex:1"><b>การยืนยันตัวตน</b><div class="xs muted">บัตรนักศึกษา/บัตรประชาชน · รูปหน้า${me.studentId?' · รหัส '+esc(me.studentId):''}</div></span><span class="tag ${VF[me.verify][1]}">${VF[me.verify][0]}</span></button>
+      <button class="it" data-act="pwSheet"><span class="ic teal">${ic('key')}</span><span style="flex:1"><b>เปลี่ยนรหัสผ่าน</b><div class="xs muted">ชื่อผู้ใช้ ${esc(me.sid)}</div></span>${ic('chev')}</button>
       <div class="it"><span class="ic amber">${ic('wallet')}</span><span style="flex:1"><b>วิธีชำระเงิน</b><div class="xs muted">${S.promptpay?'พร้อมเพย์ (QR) ยอดใส่ให้อัตโนมัติ':'ชำระกับผู้ดูแล'}</div></span></div>
     </div>
     <div class="sec"><h2>การใช้งาน</h2></div>
@@ -774,8 +928,9 @@ VIEWS.a_cams=()=>`<div class="top"><div class="grow"><div class="hello">ผู�
   <button class="btn ghost" data-act="camSheet">${ic('plus')} เพิ่มกล้อง</button>`;
 
 VIEWS.a_users=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 30 คน</div><h1>สมาชิก ${AD.users.length} คน</h1></div></div>
-  ${AD.users.map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
-    <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}</div></div>${u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':'<span class="tag ok">ปกติ</span>'}</div>
+  ${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
+    <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}${u.studentId?' · รหัส '+esc(u.studentId):''}</div></div>${u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':`<span class="tag ${VF[u.verify][1]}">${VF[u.verify][0]}</span>`}</div>
+    ${u.verify==='pending'?`<div class="btns"><button class="btn sm" data-act="aViewId" data-idx="${u.idx}">${ic('id')} ดูรูปยืนยันตัวตน</button></div>`:''}
     <div class="meta" style="margin-top:6px">เช่า ${u.rentals} ครั้ง · ${u.hours} ชม. · คืนช้า ${u.late} ครั้ง${u.created?' · สมัคร '+tDM(u.created):''}</div>
     ${u.idx!==me.idx?`<div class="btns"><button class="btn sm ghost" data-act="aUserPw" data-idx="${u.idx}">${ic('key')} ตั้งรหัสใหม่</button>
       <button class="btn sm ghost" data-act="aUser" data-a="${u.disabled?'enable':'disable'}" data-idx="${u.idx}">${u.disabled?'ปลดระงับ':'ระงับ'}</button>
@@ -821,6 +976,8 @@ ACT.authToggle=()=>{ui.authMode=ui.authMode==='login'?'register':'login';render(
 ACT.refresh=async()=>{await Promise.all([loadStatus(),loadMe(),loadAdmin()]);ui.logs=null;render(false);toast('อัปเดตแล้ว');};
 ACT.pickCam=d=>{ui.camId=+d.id;push('camDetail',{id:+d.id});};
 ACT.setHours=d=>{ui.hours=+d.h;softRender();};
+ACT.verifySubmit=async(d,b)=>{b.disabled=true;const j=await rpc('verifySubmit',{studentId:($('#vStu')||{}).value||''});b.disabled=false;
+  if(!j.ok){toast(j.msg);return;}ui.vphoto={};me=j.user;toast('ส่งแล้ว รอผู้ดูแลตรวจ');render(true);};
 ACT.doRent=async(d,b)=>{b.disabled=true;const j=await rpc('rent',{cam:d.id,hours:ui.hours});b.disabled=false;
   if(!j.ok){toast(j.msg);return;}await loadMe();route={tab:'active',stack:[{name:'pay',params:{rid:j.rental.id}}]};render(true);};
 ACT.goPay=d=>push('pay',{rid:+d.rid});
@@ -841,9 +998,9 @@ ACT.openFlow=async(d,b)=>{
   ui.openFlow={rid:r.id,action:j.action,t:Date.now(),ms:j.unlockMs||3000,sawOpen:false,closed:false};
   S.unlocking=true;await loadMe();push('open');
 };
-ACT.lockNow=async(d,b)=>{if(b)b.disabled=true;const j=await rpc('lockNow');if(!j.ok){toast(j.msg);if(b)b.disabled=false;return;}S.unlocking=false;S.door='closed';if(ui.openFlow){ui.openFlow.sawOpen=true;ui.openFlow.closed=true;}toast('ล็อกตู้แล้ว');await loadStatus();await loadMe();softRender();};
+ACT.lockNow=async(d,b)=>{if(b)b.disabled=true;const j=await rpc('lockNow');if(!j.ok){toast(j.msg);if(b)b.disabled=false;return;}S.unlocking=false;S.door='closed';if(ui.openFlow){ui.openFlow.sawOpen=true;ui.openFlow.closed=true;ui.openFlow.openAt=ui.openFlow.openAt||Date.now()-5000;}toast('ล็อกตู้แล้ว');await loadStatus();await loadMe();softRender();};
 ACT.reopen=async d=>{const r=myRentals.find(x=>x.id==d.rid);const j=await rpc('open',{rid:d.rid});if(!j.ok){toast(j.msg);return;}
-  Object.assign(ui.openFlow,{t:Date.now(),action:j.action,sawOpen:false,closed:false});S.unlocking=true;softRender();};
+  Object.assign(ui.openFlow,{t:Date.now(),action:j.action,sawOpen:false,closed:false,openAt:0});S.unlocking=true;softRender();};
 ACT.closeOpen=async()=>{ui.openFlow=null;await loadMe();go(openRental()?'active':'home');};
 ACT.extendSheet=d=>{const r=myRentals.find(x=>x.id==d.rid);if(!r)return;
   sheet(`<h2>ต่อเวลาเช่า</h2><p class="sm muted" style="margin:4px 0 14px">${esc(r.camName)} · ${baht(r.price)} ฿/ชม. · กำหนดคืนเดิม ${tFull(r.due)}</p>
@@ -860,7 +1017,7 @@ ACT.pwSheet=()=>{sheet(`<h2>เปลี่ยนรหัสผ่าน</h2><d
 ACT.doPw=async()=>{const n=$('#pwNew').value;if(n!==$('#pwNew2').value){toast('รหัสผ่านใหม่ไม่ตรงกัน');return;}
   const j=await rpc('password',{old:$('#pwOld').value,new:n});toast(j.msg);if(j.ok){closeSheet();await loadAdmin();softRender();}};
 ACT.logout=async()=>{await rpc('logout');logoutLocal('ออกจากระบบแล้ว');};
-function logoutLocal(msg){token='';localStorage.removeItem('cl_t');me=null;myRentals=[];AD={users:[],cams:[],rentals:[]};ui.settings=null;ui.logs=null;route={tab:'home',stack:[]};render(true);if(msg)toast(msg);}
+function logoutLocal(msg){token='';ui.authMode='login';ui.vphoto={};localStorage.removeItem('cl_t');me=null;myRentals=[];AD={users:[],cams:[],rentals:[]};ui.settings=null;ui.logs=null;route={tab:'home',stack:[]};render(true);if(msg)toast(msg);}
 
 // ผู้ดูแล
 ACT.aUnlock=async()=>{const j=await rpc('adminUnlock');toast(j.ok?'ปลดล็อกแล้ว':j.msg);S.unlocking=j.ok;softRender();};
@@ -881,9 +1038,16 @@ ACT.camSheet=d=>{const c=d&&d.id!==undefined?AD.cams.find(x=>x.id==d.id):null;
 ACT.saveCam=async d=>{const j=await rpc('adminCamera',{id:d.id,name:$('#cName').value,lens:$('#cLens').value,specs:$('#cSpecs').value,price:$('#cPrice').value,deposit:$('#cDep').value,status:$('#cStatus').value});
   toast(j.msg);if(j.ok){closeSheet();await loadAdmin();await loadStatus();softRender();}};
 ACT.delCam=async d=>{closeSheet();if(!await confirmBox('ลบกล้องนี้?','ลบออกจากรายการเช่าถาวร','ลบ',true))return;const j=await rpc('adminCameraDelete',{id:d.id});toast(j.msg);await loadAdmin();await loadStatus();softRender();};
-ACT.aUser=async d=>{const t={delete:'ลบสมาชิกนี้?',disable:'ระงับสมาชิกนี้?',admin:'ให้สิทธิ์ผู้ดูแล?',unadmin:'เอาสิทธิ์ผู้ดูแลออก?',enable:'ปลดระงับ?'}[d.a];
+ACT.aUser=async d=>{closeSheet();const t={approve:'อนุมัติการยืนยันตัวตน?',reject:'ไม่ผ่านการยืนยันตัวตน?',delete:'ลบสมาชิกนี้?',disable:'ระงับสมาชิกนี้?',admin:'ให้สิทธิ์ผู้ดูแล?',unadmin:'เอาสิทธิ์ผู้ดูแลออก?',enable:'ปลดระงับ?'}[d.a];
   if(!await confirmBox(t,d.a==='admin'?'ผู้ดูแลเปิดตู้ ยืนยันเงิน และแก้ตั้งค่าได้ทั้งหมด':'','ยืนยัน',d.a==='delete'||d.a==='disable'))return;
   const j=await rpc('adminUser',{idx:d.idx,action:d.a});toast(j.msg);await loadAdmin();softRender();};
+ACT.aViewId=async d=>{const u=userOf(d.idx);
+  sheet(`<h2>ยืนยันตัวตน</h2><p class="sm muted" style="margin:4px 0 12px">${esc(u.name)} · ${esc(u.sid)} · ${esc(u.phone||'')}${u.studentId?' · รหัส '+esc(u.studentId):''}</p>
+    <div class="grid2"><div><div class="lb">บัตร</div><div class="vimg" id="vi1"><div class="spin"></div></div></div><div><div class="lb">รูปหน้า</div><div class="vimg" id="vi2"><div class="spin"></div></div></div></div>
+    <p class="xs muted">เทียบหน้ากับรูปบนบัตร และชื่อบนบัตรกับชื่อที่สมัคร · รูปจะถูกลบหลังกดอนุมัติ/ปฏิเสธ</p>
+    <button class="btn" data-act="aUser" data-a="approve" data-idx="${u.idx}">${ic('check')} อนุมัติ</button><button class="btn danger" data-act="aUser" data-a="reject" data-idx="${u.idx}">ไม่ผ่าน ให้ส่งใหม่</button>`);
+  for(const [k,el] of [['id','#vi1'],['selfie','#vi2']]){const j=await rpc('adminUserPhoto',{idx:d.idx,kind:k});const box=$(el);if(box)box.innerHTML=j.ok?`<img src="${j.img}" alt="">`:`<span class="xs muted">${esc(j.msg)}</span>`;}
+};
 ACT.aUserPw=d=>{const u=userOf(d.idx);sheet(`<h2>ตั้งรหัสผ่านใหม่</h2><p class="sm muted" style="margin:4px 0 12px">${esc(u.name)} · ${esc(u.sid)} — แจ้งรหัสใหม่ให้สมาชิกเอง</p>
   <input class="inp" id="uPw" type="text" autocomplete="off" placeholder="รหัสผ่านใหม่ อย่างน้อย 4 ตัว"><button class="btn" data-act="doUserPw" data-idx="${d.idx}">บันทึก</button><button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);};
 ACT.doUserPw=async d=>{const j=await rpc('adminUser',{idx:d.idx,action:'password',pass:$('#uPw').value});toast(j.msg);if(j.ok)closeSheet();};
@@ -919,7 +1083,7 @@ async function loop(){
   if(me&&(tick%10===0||(fast&&tick%2===0)||(c==='pay'&&tick%4===0)))await loadMe();
   if(isAdmin()&&tick%10===0&&(c==='a_home'||c==='a_rent'))await loadAdmin();
   if(me){
-    if(c==='active'||c==='a_home'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||(c==='a_set'&&tick%5===0))softRender();
+    if(c==='active'||c==='a_home'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||c==='verify'||(c==='a_set'&&tick%5===0))softRender();
     else renderTabs();
   }
   setTimeout(loop,1000);
