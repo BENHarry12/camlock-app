@@ -272,8 +272,10 @@ label.btn input{display:none}
   <div class="toast" id="toast"></div>
 </div>
 <div class="printqr" id="printqr"></div>
+<!-- ช่องเลือกรูปอยู่นอกส่วนที่วาดใหม่ทุกวินาที ไม่งั้นเลือกรูปแล้วเหตุการณ์หาย -->
+<input type="file" id="filePick" accept="image/*" hidden>
 
-<script src="config.js?v=8"></script>
+<script src="config.js?v=9"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -753,7 +755,7 @@ function updateOpen(){
   }
   const evCard=(f.sawOpen||f.closed)?`<div class="card evcard"><div class="row"><div class="ic ${hasPhoto?'ok':'amber'}" style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center">${ic(hasPhoto?'check':'cam')}</div>
       <div class="grow"><b>รูปหลักฐาน${ret?'การคืน':'การรับ'}</b><div class="xs muted">${ret?'ถ่ายให้เห็นกล้องวางในตู้ ครบอุปกรณ์':'ถ่ายกล้องที่หยิบออกมา ให้เห็นสภาพก่อนใช้'}</div></div>
-      <label class="btn sm ${hasPhoto?'ghost':''}">${hasPhoto?'ถ่ายใหม่':'ถ่ายรูป'}<input type="file" accept="image/*" capture="environment" data-ev="${ret?'return':'pickup'}" data-rid="${f.rid}"></label></div>
+      <button class="btn sm ${hasPhoto?'ghost':''}" data-act="pickPhoto" data-ev="${ret?'return':'pickup'}" data-rid="${f.rid}" data-cap="environment">${hasPhoto?'ถ่ายใหม่':'ถ่ายรูป'}</button></div>
       ${f.photo?`<img class="vthumb" src="${f.photo}" alt="">`:''}</div>`:'';
   const html=`<div class="term">${lines.join('')}</div>${evCard}${after}
     ${!f.closed&&(unlocking||isOpen)?`<button class="btn amber" data-act="lockNow" ${hasPhoto?'':'disabled'}>${ic('lock')} ${ret?'ใส่กล้องแล้ว':'หยิบกล้องแล้ว'} ล็อกตู้</button>
@@ -837,7 +839,7 @@ VIEWS.verify=()=>{
     <div class="steps card"><div>ถ่ายรูปบัตรนักศึกษา / บัตรประชาชน <span class="tag ok">ส่งแล้ว</span></div><div>ถ่ายรูปหน้าตัวเอง <span class="tag ok">ส่งแล้ว</span></div><div>ผู้ดูแลเทียบหน้ากับรูปบนบัตร <span class="tag amber">กำลังตรวจ</span></div></div>`;
   const item=(k,n,title,sub,cap)=>`<div class="vstep ${P[k]?'done':''}"><div class="vnum">${P[k]?ic('check'):n}</div><div style="flex:1;min-width:0"><b>${title}</b><div class="xs muted">${sub}</div>
       ${P[k]?`<img class="vthumb" src="${P[k]}" alt="">`:''}</div>
-      <label class="btn sm ${P[k]?'ghost':''}" style="flex:none">${P[k]?'ถ่ายใหม่':'ถ่ายรูป'}<input type="file" accept="image/*" capture="${cap}" data-vk="${k}" hidden></label></div>`;
+      <button class="btn sm ${P[k]?'ghost':''}" style="flex:none" data-act="pickPhoto" data-vk="${k}" data-cap="${cap}">${P[k]?'ถ่ายใหม่':'ถ่ายรูป'}</button></div>`;
   return head+(v==='rejected'?`<div class="alert warn">${ic('alert')}<div>การยืนยันครั้งก่อนไม่ผ่าน กรุณาถ่ายรูปให้ชัด เห็นชื่อและรูปบนบัตร</div></div>`:'')+
     `<div class="card" style="padding:6px 16px">
       ${item('id',1,'ถ่ายรูปบัตรนักศึกษา / บัตรประชาชน','ให้เห็นชื่อและรูปบนบัตรชัด ๆ','environment')}
@@ -861,7 +863,7 @@ document.addEventListener('change',async e=>{
     if(f&&f.rid==e.target.dataset.rid){f.photo=data;}const i=myRentals.findIndex(x=>x.id===j.rental.id);if(i>=0)myRentals[i]=j.rental;
     toast('บันทึกหลักฐานแล้ว');if(cur().name==='open')updateOpen();else render(false);}catch(err){toast(err.message);}return;}
   const k=e.target.dataset&&e.target.dataset.vk;if(!k||!e.target.files[0])return;
-  try{toast('กำลังอัปโหลดรูป…');const data=await shrinkImage(e.target.files[0]);
+  try{toast('กำลังย่อและอัปโหลดรูป…');const data=await shrinkImage(e.target.files[0]);
     const j=await rpc('verifyUpload',{kind:k,img:data});if(!j.ok){toast(j.msg);return;}
     (ui.vphoto=ui.vphoto||{})[k]=data;render(false);toast('อัปโหลดแล้ว');}catch(err){toast(err.message);}
 });
@@ -943,7 +945,7 @@ VIEWS.a_cams=()=>`<div class="top"><div class="grow"><div class="hello">ผู�
     <button class="iconbtn" style="width:38px;height:38px;box-shadow:none;background:var(--surf2)" data-act="camSheet" data-id="${c.id}">${ic('edit')}</button></div>`).join('')||`<div class="card empty"><div class="ic teal">${ic('cam')}</div>ยังไม่มีกล้อง กด + เพื่อเพิ่ม</div>`}
   <button class="btn ghost" data-act="camSheet">${ic('plus')} เพิ่มกล้อง</button>`;
 
-VIEWS.a_users=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 30 คน</div><h1>สมาชิก ${AD.users.length} คน</h1></div></div>
+VIEWS.a_users=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 60 คน</div><h1>สมาชิก ${AD.users.length} คน</h1></div></div>
   ${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
     <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}${u.studentId?' · รหัส '+esc(u.studentId):''}</div></div>${u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':`<span class="tag ${VF[u.verify][1]}">${VF[u.verify][0]}</span>`}</div>
     ${u.verify==='pending'?`<div class="btns"><button class="btn sm" data-act="aViewId" data-idx="${u.idx}">${ic('id')} ดูรูปยืนยันตัวตน</button></div>`:''}
@@ -992,6 +994,8 @@ ACT.authToggle=()=>{ui.authMode=ui.authMode==='login'?'register':'login';render(
 ACT.refresh=async()=>{await Promise.all([loadStatus(),loadMe(),loadAdmin()]);ui.logs=null;render(false);toast('อัปเดตแล้ว');};
 ACT.pickCam=d=>{ui.camId=+d.id;push('camDetail',{id:+d.id});};
 ACT.setHours=d=>{ui.hours=+d.h;softRender();};
+ACT.pickPhoto=d=>{const i=$('#filePick');i.value='';if(d.cap)i.setAttribute('capture',d.cap);else i.removeAttribute('capture');
+  i.dataset.vk=d.vk||'';i.dataset.ev=d.ev||'';i.dataset.rid=d.rid||'';i.click();};
 ACT.verifySubmit=async(d,b)=>{b.disabled=true;const j=await rpc('verifySubmit',{studentId:($('#vStu')||{}).value||''});b.disabled=false;
   if(!j.ok){toast(j.msg);return;}ui.vphoto={};me=j.user;toast('ส่งแล้ว รอผู้ดูแลตรวจ');render(true);};
 ACT.doRent=async(d,b)=>{b.disabled=true;const j=await rpc('rent',{cam:d.id,hours:ui.hours});b.disabled=false;
