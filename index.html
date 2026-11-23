@@ -800,10 +800,12 @@ const CAM_CATALOG=[
   {m:/gopro|hero\s*1[0-3]/i,f:'GoPro Hero 8 Black and Hero 11 Black.JPG',by:'Benlisquare',lic:'CC BY-SA 4.0',note:'ภาพรุ่น HERO11 / HERO8 (ทรงเดียวกับ HERO12)'}];
 const catalogOf=c=>c&&CAM_CATALOG.find(x=>x.m.test(c.name||''));
 const commonsUrl=(f,w)=>'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(f)+'?width='+w;
-function camCredit(c){if(!c||getPhoto('c',c.id,c.ph))return '';const k=catalogOf(c);if(!k)return '';
+const camUrlOk=c=>c&&/^https?:\/\//i.test(c.url||'');
+function camCredit(c){if(!c||getPhoto('c',c.id,c.ph)||camUrlOk(c))return '';const k=catalogOf(c);if(!k)return '';
   return `<div class="xs muted" style="margin:-6px 0 10px">ภาพตัวอย่างรุ่นนี้ · ${esc(k.by)} / ${esc(k.lic)} · <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(k.f.replace(/ /g,'_'))}" target="_blank" rel="noopener">Wikimedia Commons</a>${k.note?' · '+esc(k.note):''}</div>`;}
 function camThumb(c,big){const src=getPhoto('c',c.id,c.ph);
   if(src)return `<img class="camimg${big?' big':''}" src="${src}" alt="${esc(c.name)}">`;
+  if(camUrlOk(c))return `<img class="camimg${big?' big':''}" src="${esc(c.url)}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`;
   const k=catalogOf(c);
   if(k)return `<img class="camimg${big?' big':''}" src="${commonsUrl(k.f,big?800:240)}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`;
   return `<span class="ph${big?' big':''}">${ic('cam')}</span>`;}
@@ -1560,13 +1562,17 @@ ACT.camSheet=d=>{const c=d&&d.id!==undefined?AD.cams.find(x=>x.id==d.id):null;
   sheet(`<h2>${c?'แก้ไขกล้อง':'เพิ่มกล้อง'}</h2><div style="height:12px"></div>
   ${c?`<div style="margin-bottom:10px">${camThumb(c,true)}<div class="btns" style="margin-top:0"><button class="btn sm" data-act="pickPhoto" data-cam="${c.id}">${ic('cam')} ${c.ph?'เปลี่ยนรูปกล้อง':'อัปโหลดรูปกล้อง'}</button>${c.ph?`<button class="btn sm ghost" data-act="delCamPhoto" data-id="${c.id}">ลบรูป</button>`:''}</div></div>`:`<p class="xs muted" style="margin:0 0 10px">บันทึกกล้องก่อน แล้วเปิดแก้ไขอีกครั้งเพื่อใส่รูป</p>`}
   <label class="lb">ชื่อรุ่น</label><input class="inp" id="cName" value="${esc(c?c.name:'')}" maxlength="38" placeholder="Canon EOS R50">
+  <label class="lb">ลิงก์รูปภาพ (URL) · ไม่บังคับ</label><input class="inp" id="cUrl" type="url" value="${esc(c&&c.url?c.url:'')}" maxlength="400" placeholder="https://… .jpg" data-act-input="camUrlPreview">
+  <img id="cUrlPrev" class="camimg big" style="display:${c&&camUrlOk(c)?'block':'none'};height:160px" src="${c&&camUrlOk(c)?esc(c.url):''}" referrerpolicy="no-referrer" alt="" onerror="this.style.display='none'">
+  <p class="xs muted" style="margin:-4px 0 10px">ใช้ลิงก์รูปที่เปิดได้ตรง ๆ (ลงท้าย .jpg .png .webp) ถ้าอัปโหลดรูปจากเครื่องด้วย ระบบใช้รูปที่อัปโหลดก่อน · เลือกรูปที่มีสิทธิ์ใช้</p>
   <label class="lb">เลนส์/อุปกรณ์ที่ให้</label><input class="inp" id="cLens" value="${esc(c?c.lens:'')}" maxlength="38" placeholder="RF-S 18-45mm">
   <label class="lb">สเปก (คั่นด้วย | )</label><input class="inp" id="cSpecs" value="${esc(c?c.specs:'')}" maxlength="70" placeholder="APS-C 24.2MP|4K 30p|375 g">
   <div class="grid2" style="margin:0"><div><label class="lb">ราคา/ชม. (บาท)</label><input class="inp" id="cPrice" type="number" min="0" value="${c?c.price:60}"></div><div><label class="lb">มัดจำ (บาท)</label><input class="inp" id="cDep" type="number" min="0" value="${c?c.deposit:3000}"></div></div>
   <label class="lb">สถานะ</label><select class="inp" id="cStatus" ${c&&c.status==='rented'?'disabled':''}><option value="available">ว่าง ให้เช่าได้</option><option value="maint" ${c&&c.status==='maint'?'selected':''}>ซ่อมบำรุง (ซ่อนจากการเช่า)</option></select>
   <button class="btn" data-act="saveCam" data-id="${c?c.id:''}">บันทึก</button>
   ${c?`<button class="btn danger" data-act="delCam" data-id="${c.id}">${ic('trash')} ลบกล้อง</button>`:''}<button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);};
-ACT.saveCam=async d=>{const j=await rpc('adminCamera',{id:d.id,name:$('#cName').value,lens:$('#cLens').value,specs:$('#cSpecs').value,price:$('#cPrice').value,deposit:$('#cDep').value,status:$('#cStatus').value});
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='cUrl'){const v=e.target.value.trim(),im=$('#cUrlPrev');if(!im)return;if(/^https?:\/\/\S+$/i.test(v)){im.style.display='block';im.src=v;}else im.style.display='none';}});
+ACT.saveCam=async d=>{const j=await rpc('adminCamera',{id:d.id,name:$('#cName').value,imgUrl:($('#cUrl')||{}).value||'',lens:$('#cLens').value,specs:$('#cSpecs').value,price:$('#cPrice').value,deposit:$('#cDep').value,status:$('#cStatus').value});
   toast(j.msg);if(j.ok){closeSheet();await loadAdmin();await loadStatus();softRender();}};
 ACT.delCam=async d=>{closeSheet();if(!await confirmBox('ลบกล้องนี้?','ลบออกจากรายการเช่าถาวร','ลบ',true))return;const j=await rpc('adminCameraDelete',{id:d.id});toast(j.msg);await loadAdmin();await loadStatus();softRender();};
 ACT.aUser=async d=>{closeSheet();const t={approve:'อนุมัติการยืนยันตัวตน?',reject:'ไม่ผ่านการยืนยันตัวตน?',delete:'ลบสมาชิกนี้?',disable:'ระงับสมาชิกนี้?',admin:'ให้สิทธิ์ผู้ดูแล?',unadmin:'เอาสิทธิ์ผู้ดูแลออก?',enable:'ปลดระงับ?'}[d.a];
