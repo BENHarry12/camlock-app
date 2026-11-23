@@ -351,7 +351,9 @@ label.btn input{display:none}
 .narrow{max-width:880px;margin:0 auto}
 .ppacc{background:var(--surf2);border-radius:14px;padding:4px 12px;margin:10px 0 0;text-align:left;font-size:13px}
 .ppacc>div{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.ppacc>div:last-child{border:0}
-.ppacc span{color:var(--ink3);width:70px;flex:none}.ppacc b{flex:1;min-width:0;font-weight:600}.ppacc .btn.sm{padding:5px 10px;font-size:12px}
+.ppacc span{color:var(--ink3);width:70px;flex:none}
+.refundbox{background:var(--surf2);border:1px dashed var(--line);border-radius:14px;padding:10px 12px;margin:8px 0 0}
+select.inp{appearance:auto}.ppacc b{flex:1;min-width:0;font-weight:600}.ppacc .btn.sm{padding:5px 10px;font-size:12px}
 .cam .ph{width:56px;height:56px}
 .camimg{width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none;background:#fff;display:block}
 .camimg.big{object-fit:contain;background:#fff;box-shadow:var(--sh)}
@@ -605,7 +607,7 @@ function applyRaw(){
     door:b('doorOpen')?'open':'closed',unlocking:b('lockActive'),alarm:b('alarm'),returning:b('returning'),
     available:n('available'),cams:n('camCount'),unlocks:n('unlockCount'),rssi:n('rssi'),uptime:n('uptime'),heap:n('heap'),
     activeCount:n('activeCount'),overdueCount:n('overdueCount'),readyCount:n('readyCount'),pendingPay:n('pendingPay'),
-    pendingVerify:n('pendingVerify'),refundPending:n('refundPending'),withdrawPending:n('withdrawPending'),members:n('members'),hasCounts:RT.activeCount!=null,
+    pendingVerify:n('pendingVerify'),refundPending:n('refundPending'),refundWait:n('refundWait'),withdrawPending:n('withdrawPending'),members:n('members'),hasCounts:RT.activeCount!=null,
     ssid:A.ssid||'',ip:A.ip||'',promptpay:String(A.promptpay||SHOP_PP.id),ppName:String(A.ppName||(A.promptpay?'':SHOP_PP.name)),approve:A.approve!==false,unlockMs:A.unlockMs||3000,
     easyslip:A.easyslip===true||A.easyslip==='true',lateFeeMin:A.lateFeeMin!=null?Number(A.lateFeeMin):100,lateGraceMin:Number(A.lateGraceMin||0),lostHours:A.lostHours!=null?Number(A.lostHours):24,reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts,uptimeTs:RT.uptime?RT.uptime.ts:0};
 }
@@ -651,9 +653,10 @@ function renderBanner(){
 }
 let WAL={bal:0,top:{st:0,msg:''},tx:[],wd:{st:0}};
 let WDS=[]; // คำขอถอนเงิน (ผู้ดูแล)
+let BANK={code:'',acct:'',holder:''}; // บัญชีรับเงินคืนของผู้ใช้
 async function loadMe(){if(!token)return;const j=await rpc('me');
   if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;usingCache=false;
-    WAL={bal:j.wallet||0,top:j.topup||{st:0,msg:''},tx:j.wtx||[],wd:j.withdraw||{st:0}};saveCache('cl_me',{user:me,rentals:myRentals,cams,wal:WAL});}
+    WAL={bal:j.wallet||0,top:j.topup||{st:0,msg:''},tx:j.wtx||[],wd:j.withdraw||{st:0}};BANK=j.bank||{code:'',acct:'',holder:''};saveCache('cl_me',{user:me,rentals:myRentals,cams,wal:WAL});}
   else if(!me&&j.code!==401){const c=readCache('cl_me');if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];if(c.wal)WAL=c.wal;usingCache=true;}}
   return j;}
 async function loadAdmin(){if(!isAdmin())return;const j=await rpc('adminOverview');
@@ -763,7 +766,7 @@ const owed=r=>Math.max(0,r.amount-r.paid);
 // ยอดที่ต้องจ่ายจริง: หลังคืนกล้อง ค่าปรับหักจากมัดจำก่อน ส่วนที่เกินมัดจำจึงเป็นหนี้
 const debt=r=>r.status==='returned'?Math.max(0,owed(r)-r.deposit):owed(r);
 const refundable=r=>r.refundable!=null?r.refundable:(r.forfeit||r.lost||r.refunded)?0:Math.max(0,Math.min(r.deposit,r.paid-(r.amount-r.deposit))); // มัดจำที่คืนได้
-function statusTag(r){if(r.forfeit)return '<span class="tag warn">ชำรุด · ยึดมัดจำ</span>';if(r.lost)return '<span class="tag warn">ไม่คืนกล้อง</span>';if(isLate(r))return '<span class="tag warn">เกินกำหนด</span>';if(r.status==='returned'&&r.lateFee)return '<span class="tag warn">คืนช้า</span>';const s=ST[r.status]||['-','grey'];return `<span class="tag ${s[1]}">${s[0]}</span>`;}
+function statusTag(r){if(r.rf&&r.rf.st===1)return '<span class="tag amber">รอโอนเงินคืน</span>';if(r.forfeit)return '<span class="tag warn">ชำรุด · ยึดมัดจำ</span>';if(r.lost)return '<span class="tag warn">ไม่คืนกล้อง</span>';if(isLate(r))return '<span class="tag warn">เกินกำหนด</span>';if(r.status==='returned'&&r.lateFee)return '<span class="tag warn">คืนช้า</span>';const s=ST[r.status]||['-','grey'];return `<span class="tag ${s[1]}">${s[0]}</span>`;}
 function greet(){const h=Number(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:'Asia/Bangkok'}));return h<12?'สวัสดีตอนเช้า':h<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น';}
 function firstName(){return (me.name||me.sid).split(' ')[0];}
 function doorLine(){
@@ -852,7 +855,7 @@ function checkDue(){
 function dueBar(){const r=openRental();if(!r||r.status!=='active')return '';const left=r.due-nowS();
   if(left>1800)return '';
   return `<div class="duebar">${ic('clock')}<div style="flex:1"><b>${left<=0?'เกินเวลาคืนแล้ว '+dur(-left):'ใกล้ถึงเวลาคืน · เหลือ '+dur(left)}</b><div class="xs">${left<=0?`ค่าปรับตอนนี้ ${baht(lateNow(r))} ฿ (นาทีละ ${baht(S.lateFeeMin??100)} ฿)`:`คืนก่อน ${tHM(r.due)} น. ไม่งั้นปรับนาทีละ ${baht(S.lateFeeMin??100)} ฿`}</div></div><button class="btn sm" data-go="active">ดู</button></div>`;}
-const policyText=()=>`คืนเกินกำหนดปรับนาทีละ ${baht(S.lateFeeMin??100)} บาท${S.lateGraceMin?` (ผ่อนผัน ${S.lateGraceMin} นาที)`:''} หักจากมัดจำ · ไม่คืนกล้องเกิน ${S.lostHours??24} ชม. หรือผู้ดูแลตรวจแล้วพบว่ากล้องชำรุด/เสียหาย ไม่คืนมัดจำทั้งสิ้น`;
+const policyText=()=>`มัดจำโอนคืนเข้าบัญชีธนาคารหลังตรวจสภาพ · คืนเกินกำหนดปรับนาทีละ ${baht(S.lateFeeMin??100)} บาท${S.lateGraceMin?` (ผ่อนผัน ${S.lateGraceMin} นาที)`:''} หักจากมัดจำ · ไม่คืนกล้องเกิน ${S.lostHours??24} ชม. หรือผู้ดูแลตรวจแล้วพบว่ากล้องชำรุด/เสียหาย ไม่คืนมัดจำทั้งสิ้น`;
 
 
 VIEWS.home=()=>{
@@ -871,7 +874,7 @@ VIEWS.home=()=>{
     <div class="sec"><h2>ตำแหน่งตู้</h2></div>
     <div class="card">${campusMap()}</div>
     <div class="sec"><h2>วิธีเช่า</h2></div>
-    <div class="card steps"><div>เติมเงินเข้ากระเป๋า (สแกน QR แล้วแนบสลิป) หรือจ่ายด้วย QR ทีละครั้ง</div><div>เลือกกล้องและจำนวนชั่วโมง แล้วจ่ายค่าเช่า + มัดจำ</div><div>ไปที่ตู้ กด “เปิดตู้รับกล้อง” หยิบกล้อง ปิดประตู แล้วกด “ล็อกตู้”</div><div>คืนที่ตู้เดิม กด “ไปคืนกล้อง” ใส่กล้อง ปิดประตู เสร็จ · ผู้ดูแลตรวจสภาพแล้วคืนมัดจำเข้ากระเป๋า</div></div>
+    <div class="card steps"><div>จ่ายได้ 2 แบบ: เติมเงินเข้ากระเป๋าไว้ก่อน หรือสแกน QR จ่ายตรงเฉพาะรายการที่เช่า (แนบสลิป ระบบตรวจให้อัตโนมัติ)</div><div>เลือกกล้องและจำนวนชั่วโมง แล้วจ่ายค่าเช่า + มัดจำ</div><div>ไปที่ตู้ กด “เปิดตู้รับกล้อง” หยิบกล้อง ปิดประตู แล้วกด “ล็อกตู้”</div><div>คืนที่ตู้เดิม กด “ไปคืนกล้อง” ใส่กล้อง ปิดประตู เสร็จ · ผู้ดูแลตรวจสภาพแล้วโอนมัดจำคืนเข้าบัญชีธนาคารของคุณ</div></div>
     <p class="xs muted" style="margin:8px 2px 0">${esc(policyText())}</p>
     <p class="foot">CamLock v${esc(S.fw||'')} · ${online?'ตู้ออนไลน์':'ตู้ออฟไลน์'}</p>`;
 };
@@ -907,7 +910,7 @@ VIEWS.camDetail=p=>{
       <div class="kv"><span>ค่ามัดจำ (ได้คืนหลังคืนกล้อง)</span><b>${baht(c.deposit)} ฿</b></div>
       <div class="total"><span>ชำระตอนนี้</span><b>${me.test?'0':baht(rent+c.deposit)} ฿</b></div>
       ${me.test?`<div class="alert amber" style="margin:10px 0 0">${ic('info')}<div><b>บัญชีทดสอบ</b> ไม่ต้องชำระเงิน จองแล้วไปเปิดตู้ได้เลย (กลอนเปิดจริง)</div></div>`:''}
-      <p class="xs muted" style="margin:10px 0 0">ค่ามัดจำจะคืนเข้ากระเป๋าเมื่อคืนกล้องและผู้ดูแลตรวจสภาพผ่าน · ${esc(policyText())}</p>
+      <p class="xs muted" style="margin:10px 0 0">ค่ามัดจำจะโอนคืนเข้าบัญชีธนาคารของคุณเมื่อคืนกล้องและผู้ดูแลตรวจสภาพผ่าน${hasBank(BANK)?'':' (กรอกบัญชีได้ที่หน้าบัญชี)'} · จ่ายด้วยกระเป๋าหรือสแกน QR จ่ายตรงก็ได้ · ${esc(policyText())}</p>
       ${!me.test?`<div class="kv" style="margin-top:6px"><span>เงินในกระเป๋า</span><b>${baht(WAL.bal)} ฿ ${WAL.bal>=rent+c.deposit?'<span class="tag ok">พอจ่าย</span>':'<span class="tag amber">ไม่พอ</span>'}</b></div>`:''}</div>
     ${me.verify==='ok'||me.admin||me.test?`<button class="btn" data-act="doRent" data-id="${c.id}">${me.test?'จองแบบทดสอบ (ข้ามการชำระเงิน)':'จองและไปชำระเงิน'}</button>`:`<button class="btn amber" data-go="verify">${ic('shield')} ${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนเพื่อจอง'}</button>`}`;
 };
@@ -920,7 +923,7 @@ function walletPayBlock(r){
     <div class="grow"><b>จ่ายด้วยเงินในกระเป๋า</b><div class="xs muted">คงเหลือ ${baht(WAL.bal)} ฿ · ต้องจ่าย ${baht(due)} ฿</div></div></div>
     ${ok?`<button class="btn" style="margin-top:10px" data-act="payWallet" data-rid="${r.id}">จ่าย ${baht(due)} ฿ จากกระเป๋า</button>`
        :`<button class="btn ghost" style="margin-top:10px" data-go="wallet">เงินไม่พอ · เติมเงินเข้ากระเป๋า</button>`}</div>
-    <div class="center xs muted" style="margin:-2px 0 10px">หรือสแกน QR จ่ายเฉพาะครั้งนี้</div>`;}
+    <div class="center xs muted" style="margin:-2px 0 10px">หรือสแกน QR ด้านล่าง จ่ายตรงเฉพาะรายการนี้ (ไม่ต้องเติมเข้ากระเป๋า)</div>`;}
 function payBlock(r){
   const due=debt(r);
   if(!S.promptpay)return `<div class="alert amber">${ic('info')}<div>ตู้นี้ยังไม่ได้ตั้งเลขพร้อมเพย์ กรุณาชำระ <b>${baht(due)} ฿</b> กับผู้ดูแลโดยตรง แล้วกด “ฉันชำระแล้ว”</div></div>`;
@@ -1035,7 +1038,7 @@ function updateOpen(){
   let after='';
   if(f.closed){
     if(ret){const done=r&&r.status==='returned';
-      after=done?`<div class="alert ok">${ic('check')}<div><b>คืนกล้องเรียบร้อย ขอบคุณครับ</b><br>${r.lateFee?`คืนช้า ค่าปรับ ${baht(r.lateFee)} ฿ หักจากมัดจำ`:'คืนตรงเวลา'} · มัดจำ ${baht(refundable(r))} ฿ จะคืนหลังผู้ดูแลตรวจสภาพ</div></div>`
+      after=done?`<div class="alert ok">${ic('check')}<div><b>คืนกล้องเรียบร้อย ขอบคุณครับ</b><br>${r.lateFee?`คืนช้า ค่าปรับ ${baht(r.lateFee)} ฿ หักจากมัดจำ`:'คืนตรงเวลา'} · มัดจำ ${baht(refundable(r))} ฿ จะโอนคืนเข้าบัญชีธนาคารหลังผู้ดูแลตรวจสภาพ${hasBank(BANK)||me.test?'':' · <b>อย่าลืมกรอกบัญชีรับเงินคืนในหน้าบัญชี</b>'}</div></div>`
         :`<div class="card row"><div class="spin"></div><div>กำลังบันทึกการคืน…</div></div>`;
     }else after=`<div class="alert ok">${ic('check')}<div><b>รับกล้องเรียบร้อย</b><br>คืนก่อน ${r?tFull(r.due):'-'}</div></div>`;
   }else if(!unlocking&&!f.sawOpen&&Date.now()-f.t>f.ms+1500){
@@ -1065,14 +1068,12 @@ AFTER.open=()=>{
 
 VIEWS.active=()=>{
   const r=openRental();
-  if(!r){const last=myRentals.find(x=>x.status==='returned');
+  if(!r){const last=myRentals.filter(x=>x.status==='returned'||(x.status==='cancelled'&&x.rf&&x.rf.st)).sort((a,b)=>b.id-a.id)[0];
     return `<div class="top"><div class="grow"><div class="hello">กำลังเช่าอยู่</div><h1>ยังไม่มีรายการ</h1></div></div>
     <div class="card empty"><div class="ic teal">${ic('cam')}</div><h3 style="color:var(--ink)">ยังไม่ได้เช่ากล้อง</h3><p class="sm">เลือกกล้องแล้วรับที่ตู้ได้ทันที</p><button class="btn" data-go="rent" style="margin-top:8px">เลือกกล้อง</button></div>
-    ${last?`<div class="card"><div class="row"><div class="grow"><div class="xs muted">ครั้งล่าสุด</div><h3>${esc(last.camName)}</h3><div class="sm muted">คืนเมื่อ ${tFull(last.returned)}</div></div>${statusTag(last)}</div>
-      ${last.forfeit?`<div class="alert warn" style="margin:10px 0 0">${ic('alert')}<div>ผู้ดูแลตรวจแล้วพบว่ากล้องชำรุด/เสียหาย <b>ไม่คืนมัดจำ</b></div></div>`
-        :last.lost?`<div class="alert warn" style="margin:10px 0 0">${ic('alert')}<div>คืนกล้องเกินเวลาที่กำหนด <b>ไม่คืนมัดจำ</b></div></div>`
-        :last.refunded&&last.deposit?`<div class="alert ok" style="margin:10px 0 0">${ic('check')}<div>ตรวจสภาพผ่าน คืนมัดจำเข้ากระเป๋าแล้ว</div></div>`
-        :last.deposit?`<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div>มัดจำที่จะได้คืน ${baht(refundable(last))} ฿ รอผู้ดูแลตรวจสภาพ แล้วคืนเข้ากระเป๋า</div></div>`:''}</div>`:''}`;}
+    ${last?`<div class="card"><div class="row"><div class="grow"><div class="xs muted">ครั้งล่าสุด</div><h3>${esc(last.camName)}</h3><div class="sm muted">${last.status==='cancelled'?'ยกเลิกแล้ว':'คืนเมื่อ '+tFull(last.returned)}</div></div>${statusTag(last)}</div>
+      ${refundNote(last)}</div>`:''}
+    ${myRentals.filter(x=>x!==last&&x.rf&&x.rf.st===1).map(x=>`<div class="card"><div class="row"><div class="grow"><h3>${esc(x.camName)}</h3><div class="sm muted">#${x.id} · ${ST[x.status]?ST[x.status][0]:''}</div></div>${statusTag(x)}</div>${refundNote(x)}</div>`).join('')}`;}
   const d=doorLine();
   const cm=cams.find(c=>c.id===r.cam);
   const details=`<div class="card">${cm&&(cm.ph||catalogOf(cm))?camThumb(cm,true)+camCredit(cm):''}<div class="kv"><span>กล้อง</span><b>${esc(r.camName)}</b></div><div class="kv"><span>รับ/คืนที่</span><b>${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</b></div>
@@ -1118,7 +1119,7 @@ VIEWS.history=()=>{
     (groups[g]=groups[g]||[]).push(r);});
   const listHtml=Object.entries(groups).map(([g,rs])=>`<div class="xs muted" style="margin:14px 0 6px">${g}</div><div class="card list" style="padding:4px 16px">${rs.map(r=>`
     <div class="it"><div class="ic teal" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none">${ic('cam')}</div>
-    <div class="grow"><b style="font-family:var(--fd)">${esc(r.camName)}</b><div class="xs muted">${tDM(r.picked||r.created)} · ${r.hours} ชม. · ${r.status==='returned'?(r.lateFee?'คืนช้า':'คืนตรงเวลา'):r.status==='active'?'เหลือ '+dur(r.due-nowS()):ST[r.status][0]}</div></div>${statusTag(r)}</div>`).join('')}</div>`).join('');
+    <div class="grow"><b style="font-family:var(--fd)">${esc(r.camName)}</b><div class="xs muted">${tDM(r.picked||r.created)} · ${r.hours} ชม. · ${r.status==='returned'?(r.lateFee?'คืนช้า':'คืนตรงเวลา'):r.status==='active'?'เหลือ '+dur(r.due-nowS()):ST[r.status][0]}${r.rf&&r.rf.st===2?' · โอนคืน '+baht(r.rf.amount)+' ฿ แล้ว':r.rf&&r.rf.st===1?' · รอโอนคืน '+baht(r.rf.amount)+' ฿':''}</div></div>${statusTag(r)}</div>`).join('')}</div>`).join('');
   return `<div class="top"><div class="grow"><div class="hello">ประวัติ</div><h1>การเช่าย้อนหลัง</h1></div></div>
     <div class="grid3" style="margin-bottom:12px"><div class="tile"><div class="v">${done.length}</div><div class="k">ครั้งทั้งหมด</div></div><div class="tile"><div class="v">${hours}</div><div class="k">ชั่วโมงรวม</div></div><div class="tile"><div class="v">${late}</div><div class="k">คืนช้า</div></div></div>
     <div class="card"><h3>การใช้งานรายเดือน</h3><div class="bars">${months.map((m,i)=>`<div class="${i===7?'cur':''}"><i style="height:${Math.round(m.n/max*80)+4}%"></i><span>${m.l}</span></div>`).join('')}</div></div>
@@ -1213,19 +1214,50 @@ document.addEventListener('change',async e=>{
     (ui.vphoto=ui.vphoto||{})[k]=data;render(false);toast('อัปโหลดแล้ว');}catch(err){toast(err.message);}
 });
 
-/* ---------- ถอนเงิน (คืนมัดจำเข้าพร้อมเพย์) ----------
-   มัดจำที่ผู้ดูแลตรวจกล้องผ่านแล้วจะเข้ากระเป๋า กด "ถอนเงิน" เพื่อขอให้โอนเข้าพร้อมเพย์ของตัวเอง
-   เงินถูกกันไว้ทันที ผู้ดูแลสแกน QR ในหน้าแอดมินโอนให้ แล้วกด "โอนแล้ว" (ปฏิเสธ = เงินกลับเข้ากระเป๋า) */
+/* ---------- ถอนเงินที่เติมไว้ในกระเป๋า เข้าบัญชีธนาคาร ----------
+   เงินถูกกันไว้ทันที ผู้ดูแลโอนให้แล้วกด "โอนแล้ว" (ปฏิเสธ = เงินกลับเข้ากระเป๋า) */
+/* ---------- บัญชีธนาคารสำหรับรับเงินคืน ----------
+   ค่ามัดจำ/เงินจากรายการที่ยกเลิก โอนคืนเข้าบัญชีธนาคารนี้โดยตรง (ไม่เข้ากระเป๋าเว็บ)
+   ต้องตรงกับตาราง BANKS ในเฟิร์มแวร์ (รหัส, ชื่อ, จำนวนหลัก) */
+const BANKS=[['KBANK','กสิกรไทย',10,10],['SCB','ไทยพาณิชย์',10,10],['BBL','กรุงเทพ',10,10],['KTB','กรุงไทย',10,10],['BAY','กรุงศรีอยุธยา',10,10],
+  ['TTB','ทหารไทยธนชาต (ttb)',10,10],['GSB','ออมสิน',12,12],['BAAC','ธ.ก.ส.',12,12],['GHB','อาคารสงเคราะห์',12,12],['UOB','ยูโอบี',10,10],
+  ['CIMB','ซีไอเอ็มบี ไทย',10,10],['KKP','เกียรตินาคินภัทร',10,10],['LHB','แลนด์ แอนด์ เฮ้าส์',10,10],['TISCO','ทิสโก้',10,10],['ICBC','ไอซีบีซี (ไทย)',10,10],
+  ['PP','พร้อมเพย์',10,13],['OTHER','ธนาคารอื่น',8,15]];
+const bankDef=c=>BANKS.find(b=>b[0]===c);
+const bankName=c=>{const b=bankDef(c);return b?b[1]:(c||'-');};
+const hasBank=b=>!!(b&&b.code&&b.acct&&b.holder);
+function fmtAcct(code,a){a=String(a||'');if(code==='PP')return fmtPP(a);if(a.length===10)return a.replace(/^(\d{3})(\d)(\d{5})(\d)$/,'$1-$2-$3-$4');if(a.length===12)return a.replace(/^(\d{3})(\d{3})(\d{6})$/,'$1-$2-$3');return a;}
+const bankLine=b=>hasBank(b)?`${esc(bankName(b.code))} <b class="mono">${esc(fmtAcct(b.code,b.acct))}</b> · ${esc(b.holder)}`:'<i>ยังไม่ได้กรอกบัญชี</i>';
+// ตรวจเลขบัญชีฝั่งเว็บ (เฟิร์มแวร์ตรวจซ้ำอีกชั้น) คืนข้อความผิดพลาด หรือ ''
+function bankErr(code,acct,holder){const b=bankDef(code);acct=String(acct||'').replace(/\D/g,'');
+  if(!b)return 'เลือกธนาคาร';
+  if(code==='PP'){if(acct.length!==10&&acct.length!==13)return 'พร้อมเพย์ต้องเป็นเบอร์โทร 10 หลัก หรือเลขบัตรประชาชน 13 หลัก';if(acct.length===10&&acct[0]!=='0')return 'เบอร์โทรพร้อมเพย์ต้องขึ้นต้นด้วย 0';}
+  else if(acct.length<b[2]||acct.length>b[3])return `เลขบัญชี${b[1]} ต้องมี ${b[2]===b[3]?b[2]:b[2]+'-'+b[3]} หลัก (ตอนนี้ ${acct.length} หลัก)`;
+  if(String(holder||'').trim().length<4)return 'ใส่ชื่อ-นามสกุลเจ้าของบัญชีให้ครบ';
+  return '';}
+// กล่องสถานะการคืนเงินของรายการ (ฝั่งผู้ใช้)
+function refundNote(r){
+  if(!r||me&&me.test)return '';
+  const rf=r.rf||{st:0};
+  if(r.forfeit)return `<div class="alert warn" style="margin:10px 0 0">${ic('alert')}<div>ผู้ดูแลตรวจแล้วพบว่ากล้องชำรุด/เสียหาย <b>ไม่คืนมัดจำ</b></div></div>`;
+  if(r.lost)return `<div class="alert warn" style="margin:10px 0 0">${ic('alert')}<div>ไม่คืนกล้องภายในเวลาที่กำหนด <b>ไม่คืนมัดจำ</b></div></div>`;
+  const what=r.status==='cancelled'?'เงินที่จ่ายแล้ว':'ค่ามัดจำ';
+  const need=!hasBank(BANK)?`<button class="btn sm amber" style="margin-top:8px" data-act="bankSheet">${ic('wallet')} กรอกบัญชีธนาคารเพื่อรับเงินคืน</button>`:'';
+  if(rf.st===2)return `<div class="alert ok" style="margin:10px 0 0">${ic('check')}<div><b>โอน${what}คืน ${baht(rf.amount)} ฿ แล้ว</b><div class="xs">${hasBank(rf.to)?'เข้า '+bankLine(rf.to):esc(rf.ref||'')}${rf.doneAt?' · '+tFull(rf.doneAt):''}${rf.ref&&hasBank(rf.to)?' · อ้างอิง '+esc(rf.ref):''}</div></div></div>`;
+  if(rf.st===1)return `<div class="alert teal" style="margin:10px 0 0">${ic('clock')}<div style="flex:1"><b>รอผู้ดูแลโอน${what}คืน ${baht(rf.amount)} ฿</b><div class="xs">เข้าบัญชี ${bankLine(BANK)}</div>${need||`<button class="link xs" data-act="bankSheet">แก้ไขบัญชี</button>`}</div></div>`;
+  if(r.status==='returned'&&!r.refunded&&r.deposit)return `<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div style="flex:1">มัดจำ ${baht(refundable(r))} ฿ รอผู้ดูแลตรวจสภาพกล้อง แล้วจะ<b>โอนคืนเข้าบัญชีธนาคาร</b>ของคุณ<div class="xs">${bankLine(BANK)}</div>${need}</div></div>`;
+  if(r.status==='returned'&&r.refunded&&r.deposit&&!rf.st)return `<div class="alert ok" style="margin:10px 0 0">${ic('check')}<div>ตรวจสภาพผ่าน ปิดรายการแล้ว</div></div>`;
+  return '';}
 function wdStatus(){const w=WAL.wd||{st:0};
-  if(w.st===1)return `<div class="alert amber">${ic('clock')}<div style="flex:1"><b>รอผู้ดูแลโอน ${baht(w.amount)} ฿</b><div class="xs">เข้าพร้อมเพย์ ${esc(fmtPP(w.pp))} · ${esc(w.name)}${w.at?' · ขอเมื่อ '+tFull(w.at):''}</div></div><button class="btn sm ghost" data-act="wdCancel">ยกเลิก</button></div>`;
-  if(w.st===2)return `<div class="alert ok">${ic('check')}<div><b>โอนเงินถอน ${baht(w.amount)} ฿ แล้ว</b><div class="xs">เข้าพร้อมเพย์ ${esc(fmtPP(w.pp))}${w.doneAt?' · '+tFull(w.doneAt):''}${w.note?' · '+esc(w.note):''}</div></div></div>`;
+  if(w.st===1)return `<div class="alert amber">${ic('clock')}<div style="flex:1"><b>รอผู้ดูแลโอน ${baht(w.amount)} ฿</b><div class="xs">เข้า ${bankLine(w.to)}${w.at?' · ขอเมื่อ '+tFull(w.at):''}</div></div><button class="btn sm ghost" data-act="wdCancel">ยกเลิก</button></div>`;
+  if(w.st===2)return `<div class="alert ok">${ic('check')}<div><b>โอนเงินถอน ${baht(w.amount)} ฿ แล้ว</b><div class="xs">เข้า ${bankLine(w.to)}${w.doneAt?' · '+tFull(w.doneAt):''}${w.note?' · '+esc(w.note):''}</div></div></div>`;
   if(w.st===3)return `<div class="alert warn">${ic('alert')}<div><b>ถอนเงินไม่สำเร็จ เงินกลับเข้ากระเป๋าแล้ว</b><div class="xs">${esc(w.note||'ติดต่อผู้ดูแล')}</div></div></div>`;
   return '';}
-function adminWdCard(x){const w=x.w;let q='';if(w.st===1){try{q=QR.svg(promptpayPayload(w.pp,w.amount));}catch(e){}}
+function adminWdCard(x){const w=x.w;w.to=w.to||{};let q='';if(w.st===1&&w.to.code==='PP'&&hasBank(w.to)){try{q=QR.svg(promptpayPayload(w.to.acct,w.amount));}catch(e){}}
   return `<div class="card"><div class="row"><div class="grow"><b>${esc(x.uname||x.sid)}</b><div class="xs muted">${esc(x.sid)} · ${w.at?tFull(w.at):'-'}</div></div><span class="tag ${w.st===1?'amber':w.st===2?'ok':'grey'}">${w.st===1?'รอโอน':w.st===2?'โอนแล้ว':'ปฏิเสธ'}</span></div>
     <div class="mono" style="font-size:22px;font-weight:600;color:var(--brand);margin:6px 0">${baht(w.amount)} ฿</div>
-    <div class="sm">พร้อมเพย์ <b class="mono">${esc(fmtPP(w.pp))}</b> · ${esc(w.name)}</div>
-    ${w.st===1?`<div class="center" style="margin-top:8px"><div class="qr">${q}</div><div class="xs muted">สแกนด้วยแอปธนาคารเพื่อโอน (ยอดใส่ให้แล้ว)</div></div>
+    <div class="sm">${bankLine(w.to)}</div>
+    ${w.st===1?`${hasBank(w.to)?`<button class="btn sm ghost" style="margin-top:6px" data-act="copyTxt" data-v="${esc(w.to.acct)}">${ic('copy')} คัดลอกเลขบัญชี</button>`:''}${q?`<div class="center" style="margin-top:8px"><div class="qr">${q}</div><div class="xs muted">สแกนด้วยแอปธนาคารเพื่อโอน (ยอดใส่ให้แล้ว)</div></div>`:''}
       <div class="btns"><button class="btn sm" data-act="aWd" data-u="${x.u}" data-a="paid">${ic('check')} โอนแล้ว</button><button class="btn sm ghost" data-act="aWd" data-u="${x.u}" data-a="reject">ปฏิเสธ (คืนเข้ากระเป๋า)</button></div>`
       :`<div class="xs muted" style="margin-top:4px">${w.doneAt?tFull(w.doneAt):''}${w.note?' · '+esc(w.note):''}</div>`}</div>`;}
 
@@ -1235,8 +1267,8 @@ VIEWS.wallet=()=>{
   const st=WAL.top||{st:0};
   const topMsg=st.st===1?`<div class="alert teal"><div class="spin"></div><div><b>กำลังตรวจสลิปกับธนาคาร…</b></div></div>`:st.st===3?`<div class="alert warn">${ic('alert')}<div><b>เติมเงินไม่สำเร็จ</b><div class="xs">${esc(st.msg||'')}</div></div></div>`:st.st===2?`<div class="alert ok">${ic('check')}<div>${esc(st.msg||'เติมเงินสำเร็จ')}</div></div>`:'';
   return `<div class="back"><button data-act="back">${ic('left')}</button><h2>กระเป๋าเงิน</h2></div>
-    <div class="wallet" style="margin-top:12px"><div class="k">ยอดเงินคงเหลือ</div><div class="v">${baht(WAL.bal)} ฿</div><div class="xs" style="opacity:.75">ใช้จ่ายค่าเช่า มัดจำ ต่อเวลา · มัดจำที่ได้คืนจะเข้ากระเป๋านี้</div>
-      <button class="btn sm" style="margin-top:10px" data-act="wdSheet" ${WAL.bal<1||WAL.wd.st===1?'disabled':''}>${ic('wallet')} ถอนเงิน / รับมัดจำคืน</button></div>
+    <div class="wallet" style="margin-top:12px"><div class="k">ยอดเงินคงเหลือ</div><div class="v">${baht(WAL.bal)} ฿</div><div class="xs" style="opacity:.75">ใช้จ่ายค่าเช่า มัดจำ ต่อเวลา · ค่ามัดจำจะโอนคืนเข้าบัญชีธนาคารโดยตรง ไม่เข้ากระเป๋านี้</div>
+      <button class="btn sm" style="margin-top:10px" data-act="wdSheet" ${WAL.bal<1||WAL.wd.st===1?'disabled':''}>${ic('wallet')} ถอนเงินเข้าบัญชี</button></div>
     ${wdStatus()}
     <div class="card"><h3 style="margin-bottom:10px">เติมเงิน</h3>
       <div class="amts">${amts.map(v=>`<button class="${a===v?'on':''}" data-act="setTopAmt" data-v="${v}">${baht(v)}</button>`).join('')}</div>
@@ -1261,6 +1293,7 @@ VIEWS.account=()=>{
     <div class="sec"><h2>บัญชีและความปลอดภัย</h2></div>
     <div class="card menu" style="padding:4px 16px">
       <button class="it" data-go="verify"><span class="ic ${VF[me.verify][1]}">${ic('shield')}</span><span style="flex:1"><b>การยืนยันตัวตน</b><div class="xs muted">บัตรนักศึกษา/บัตรประชาชน · รูปหน้า${me.studentId?' · รหัส '+esc(me.studentId):''}</div></span><span class="tag ${VF[me.verify][1]}">${VF[me.verify][0]}</span></button>
+      <button class="it" data-act="bankSheet"><span class="ic ${hasBank(BANK)?'ok':'amber'}">${ic('wallet')}</span><span style="flex:1"><b>บัญชีรับเงินคืน (มัดจำ)</b><div class="xs muted">${hasBank(BANK)?bankLine(BANK):'ยังไม่ได้กรอก · ต้องกรอกเพื่อรับมัดจำคืน'}</div></span>${hasBank(BANK)?ic('chev'):'<span class="tag amber">กรอก</span>'}</button>
       <button class="it" data-act="pwSheet"><span class="ic teal">${ic('key')}</span><span style="flex:1"><b>เปลี่ยนรหัสผ่าน</b><div class="xs muted">ชื่อผู้ใช้ ${esc(me.sid)}</div></span>${ic('chev')}</button>
       <div class="it"><span class="ic amber">${ic('wallet')}</span><span style="flex:1"><b>วิธีชำระเงิน</b><div class="xs muted">${S.promptpay?'พร้อมเพย์ (QR) ยอดใส่ให้อัตโนมัติ':'ชำระกับผู้ดูแล'}</div></span></div>
     </div>
@@ -1287,16 +1320,27 @@ function adminRentalCard(r){
   if(r.status==='active'){if(due>0&&!r.notified)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿</button>`);acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="returned" data-rid="${r.id}">รับคืนเอง</button>`);
     if(late&&!r.lost&&r.deposit)acts.push(`<button class="btn sm danger" data-act="aRent" data-a="lost" data-rid="${r.id}">ไม่คืนกล้อง · ยึดมัดจำ</button>`);}
   if(r.status==='returned'){if(due>0&&!r.refunded)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿ เป็นเงินสด</button>`);
-    if(!r.refunded&&r.deposit){acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">${ic('check')} ตรวจผ่าน · คืนมัดจำ ${baht(refundable(r))} ฿ เข้ากระเป๋า</button>`);
+    if(!r.refunded&&r.deposit&&!(r.rf&&r.rf.st===1)){acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">${ic('check')} ตรวจผ่าน · อนุมัติคืนมัดจำ ${baht(refundable(r))} ฿</button>`);
       if(!r.lost)acts.push(`<button class="btn sm danger" data-act="aRent" data-a="forfeit" data-rid="${r.id}">ชำรุด/เสียหาย · ไม่คืนมัดจำ</button>`);}}
+  if(r.rf&&r.rf.st===1){acts.unshift(`<button class="btn sm" data-act="aRefundPaid" data-rid="${r.id}">${ic('check')} โอน${r.status==='cancelled'?'เงิน':'ค่ามัดจำ'}คืนแล้ว</button>`);
+    if(r.status==='returned'&&!r.lost)acts.push(`<button class="btn sm danger" data-act="aRent" data-a="forfeit" data-rid="${r.id}">ชำรุด/เสียหาย · ไม่คืนมัดจำ</button>`);}
   if(r.photoPick)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="pickup">${ic('cam')} หลักฐานรับ</button>`);
   if(r.photoRet)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="return">${ic('cam')} หลักฐานคืน</button>`);
-  if(['returned','cancelled'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="delete" data-rid="${r.id}">${ic('trash')}</button>`);
+  if(['returned','cancelled'].includes(r.status)&&!(r.rf&&r.rf.st===1))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="delete" data-rid="${r.id}">${ic('trash')}</button>`);
   return `<div class="rcard"><div class="row"><div class="grow"><b style="font-family:var(--fd)">#${r.id} ${esc(r.camName)}</b><div class="meta">${esc(r.uname)} · ${esc(r.sid)}</div></div>${statusTag(r)}</div>
     <div class="meta" style="margin-top:6px">${r.hours} ชม. · ยอด ${baht(r.amount)} ฿ · ชำระแล้ว ${baht(r.paid)} ฿${r.lateFee?` · ค่าปรับ ${baht(r.lateFee)} ฿`:''}${r.status==='active'&&late?` · ค่าปรับสะสม ${baht(lateNow(r))} ฿`:''}${r.forfeit?' · ยึดมัดจำ (ชำรุด)':r.lost?' · ยึดมัดจำ (ไม่คืน)':r.refunded?' · ปิดรายการแล้ว':''}</div>
     <div class="meta">${r.status==='active'?`ต้องคืน ${tFull(r.due)}${late?' · <b style="color:var(--warn)">เกิน '+dur(nowS()-r.due)+'</b>':''}`:r.status==='returned'?`คืนเมื่อ ${tFull(r.returned)}`:`จองเมื่อ ${tFull(r.created)}`}</div>
+    ${adminRefundBox(r)}
     ${acts.length?`<div class="btns">${acts.join('')}</div>`:''}</div>`;
 }
+// กล่องบัญชีปลายทางสำหรับโอนเงินคืน (ผู้ดูแล)
+function adminRefundBox(r){const rf=r.rf||{st:0};if(!rf.st)return '';
+  if(rf.st===2)return `<div class="meta" style="margin-top:6px;color:var(--ok,#16a34a)">✓ โอนคืน ${baht(rf.amount)} ฿ แล้ว${hasBank(rf.to)?' → '+bankLine(rf.to):''}${rf.ref?' · '+esc(rf.ref):''}${rf.doneAt?' · '+tFull(rf.doneAt):''}</div>`;
+  const b=rf.to||{};let q='';if(b.code==='PP'&&hasBank(b)){try{q=QR.svg(promptpayPayload(b.acct,rf.amount));}catch(e){}}
+  return `<div class="refundbox"><div class="row"><div class="grow"><div class="xs muted">ต้องโอน${rf.kind===1?'เงินคืน (ยกเลิก)':'ค่ามัดจำคืน'}</div><div class="mono" style="font-size:20px;font-weight:600;color:var(--brand)">${baht(rf.amount)} ฿</div></div>${hasBank(b)?'':'<span class="tag warn">ผู้เช่ายังไม่กรอกบัญชี</span>'}</div>
+    ${hasBank(b)?`<div class="ppacc" style="margin-top:6px"><div><span>ธนาคาร</span><b>${esc(bankName(b.code))}</b></div><div><span>เลขบัญชี</span><b class="mono">${esc(fmtAcct(b.code,b.acct))}</b><button class="btn sm ghost" data-act="copyTxt" data-v="${esc(b.acct)}">${ic('copy')} คัดลอก</button></div><div><span>ชื่อบัญชี</span><b>${esc(b.holder)}</b></div></div>
+      ${q?`<div class="center" style="margin-top:6px"><div class="qr">${q}</div><div class="xs muted">สแกนด้วยแอปธนาคาร ยอดใส่ให้แล้ว</div></div>`:''}`
+      :`<div class="xs muted" style="margin-top:4px">แจ้งให้ผู้เช่ากรอกบัญชีในหน้าบัญชี หรือคืนเงินทางอื่นแล้วใส่หมายเหตุ</div>`}</div>`;}
 
 /* =====================================================================
    แดชบอร์ดผู้ดูแล
@@ -1352,11 +1396,12 @@ function dashStats(){
     monthIncome:earned.filter(r=>dayKey(when(r)).startsWith(month)).reduce((a,r)=>a+income(r),0),
     totalIncome:earned.reduce((a,r)=>a+income(r),0),
     todayCount:earned.filter(r=>dayKey(when(r))===today).length,
-    deposits:R.filter(r=>['ready','active'].includes(r.status)||(r.status==='returned'&&!r.refunded)).reduce((a,r)=>a+r.deposit,0),
+    deposits:R.filter(r=>['ready','active'].includes(r.status)||(r.status==='returned'&&!r.refunded)).reduce((a,r)=>a+(r.rf&&r.rf.st===1?r.rf.amount:r.deposit),0),
     owedTotal:R.filter(r=>r.status!=='cancelled').reduce((a,r)=>a+debt(r),0),
     days,hours,active,late:active.filter(isLate),
     verify:R.filter(r=>r.status==='verify'||(r.notified&&owed(r)>0)),ready:R.filter(r=>r.status==='ready'),
-    refunds:returned.filter(r=>!r.refunded&&r.deposit),
+    refunds:returned.filter(r=>!r.refunded&&r.deposit&&!(r.rf&&r.rf.st===1)),
+    rfWait:R.filter(r=>r.rf&&r.rf.st===1),
     cams:Object.entries(camCount).map(([l,v])=>({l,v})).sort((a,b)=>b.v-a.v).slice(0,6),
     users:Object.entries(userCount).map(([l,o])=>({l,v:o.v,s:o.v+' ครั้ง · '+o.h+' ชม.'})).sort((a,b)=>b.v-a.v).slice(0,5),
     status:[{l:'กำลังเช่า',v:byStatus('active'),c:COL.brand},{l:'รอรับ',v:byStatus('ready'),c:COL.brand2},{l:'รอชำระ/ตรวจ',v:byStatus('await')+byStatus('verify'),c:COL.accent},{l:'คืนแล้ว',v:returned.length,c:COL.ok},{l:'ยกเลิก',v:byStatus('cancelled'),c:COL.mute}],
@@ -1386,7 +1431,7 @@ VIEWS.a_home=()=>{
       ${kpi('รอตรวจเงิน',S.hasCounts?S.pendingPay:st.verify.length,'ค้างชำระรวม '+baht(st.owedTotal)+' ฿','wallet','amber','a_rent')}
       ${kpi('รอยืนยันตัวตน',S.hasCounts?S.pendingVerify:pendId,'สมาชิก '+(S.hasCounts?S.members:AD.users.length)+' คน','shield','amber','a_users')}
       ${kpi('กล้องถูกใช้',util+'%',`เช่า ${camsRented} · ว่าง ${S.available??camsTotal-camsRented} · ซ่อม ${camsMaint}`,'cam','teal','a_cams')}
-      ${kpi('มัดจำที่ถืออยู่',baht(st.deposits)+' ฿','รอคืน '+(S.hasCounts?S.refundPending:st.refunds.length)+' รายการ','key','violet')}
+      ${kpi('มัดจำที่ถืออยู่',baht(st.deposits)+' ฿','รอตรวจ '+(S.hasCounts?S.refundPending:st.refunds.length)+' · รอโอน '+st.rfWait.length,'key','violet')}
       ${kpi('รอโอนถอนเงิน',WDS.filter(x=>x.w.st===1).length||S.withdrawPending||0,'ยอดรวม '+baht(WDS.filter(x=>x.w.st===1).reduce((a,x)=>a+x.w.amount,0))+' ฿','wallet','amber')}
     </div>
     <div class="dash">
@@ -1420,7 +1465,8 @@ VIEWS.a_home=()=>{
     ${st.verify.length?`<div class="sec"><h2>รอตรวจสอบการชำระ</h2></div><div class="cards2">${st.verify.map(adminRentalCard).join('')}</div>`:''}
     ${st.late.length?`<div class="sec"><h2>เกินกำหนดคืน</h2></div><div class="cards2">${st.late.map(adminRentalCard).join('')}</div>`:''}
     ${st.ready.length?`<div class="sec"><h2>รอรับกล้อง</h2></div><div class="cards2">${st.ready.map(adminRentalCard).join('')}</div>`:''}
-    ${st.refunds.length?`<div class="sec"><h2>รอคืนมัดจำ</h2></div><div class="cards2">${st.refunds.map(adminRentalCard).join('')}</div>`:''}
+    ${st.rfWait.length?`<div class="sec"><h2>รอโอนเงินคืนเข้าบัญชี (${st.rfWait.length})</h2></div><div class="cards2">${st.rfWait.map(adminRentalCard).join('')}</div>`:''}
+    ${st.refunds.length?`<div class="sec"><h2>รอตรวจสภาพ · คืนมัดจำ</h2></div><div class="cards2">${st.refunds.map(adminRentalCard).join('')}</div>`:''}
     <p class="foot">ข้อมูลจากตู้โดยตรง (ประวัติล่าสุด 40 รายการ) · ${live?'อัปเดตสดผ่าน ThingsBoard WebSocket':'อัปเดตทุก 3 วินาที'}</p>`;
 };
 AFTER.a_home=()=>{if(!ui.logs&&!(ui.feed&&ui.feed.length))ACT.loadLog();};
@@ -1578,7 +1624,7 @@ ACT.aLock=async()=>{const j=await rpc('lockNow');toast(j.ok?'ล็อกแล�
 ACT.aEvidence=async d=>{sheet(`<h2>รูปหลักฐาน${d.k==='return'?'การคืน':'การรับ'} #${d.rid}</h2><div class="vimg" id="evImg" style="aspect-ratio:4/3;margin-top:12px"><div class="spin"></div></div><button class="btn ghost" data-act="closeSheet">ปิด</button>`);
   const j=await rpc('adminEvidence',{rid:d.rid,kind:d.k});const b=$('#evImg');if(b)b.innerHTML=j.ok?`<img src="${j.img}" alt="" style="object-fit:contain">`:`<span class="xs muted">${esc(j.msg)}</span>`;};
 ACT.aRent=async d=>{
-  const labels={cancel:['ยกเลิกรายการนี้?','กล้องจะกลับมาว่าง ถ้าลูกค้าโอนเงินแล้วต้องคืนเงินเอง'],delete:['ลบรายการนี้?','ลบออกจากประวัติถาวร'],returned:['รับคืนกล้องเอง?','ใช้เมื่อลูกค้าคืนกล้องกับผู้ดูแลโดยตรง ระบบคิดค่าปรับตามเวลาที่เกิน'],refund:['ตรวจสภาพผ่าน คืนมัดจำ?','เงินมัดจำ (หักค่าปรับแล้ว) จะเข้ากระเป๋าของผู้เช่าทันที'],forfeit:['กล้องชำรุด/เสียหาย?','ไม่คืนมัดจำทั้งสิ้น และย้อนกลับไม่ได้'],lost:['ไม่คืนกล้อง?','ยึดมัดจำทั้งหมด ผู้เช่าจะไม่ได้มัดจำคืน'],reject:['ยังไม่ได้รับเงิน?','รายการจะกลับไปเป็น “รอชำระเงิน” ให้ลูกค้าโอนใหม่']};
+  const labels={cancel:['ยกเลิกรายการนี้?','กล้องจะกลับมาว่าง ถ้าลูกค้าจ่ายเงินแล้ว ระบบจะสร้างรายการรอโอนเงินคืนเข้าบัญชีของลูกค้า'],delete:['ลบรายการนี้?','ลบออกจากประวัติถาวร'],returned:['รับคืนกล้องเอง?','ใช้เมื่อลูกค้าคืนกล้องกับผู้ดูแลโดยตรง ระบบคิดค่าปรับตามเวลาที่เกิน'],refund:['ตรวจสภาพผ่าน อนุมัติคืนมัดจำ?','ระบบจะแสดงบัญชีธนาคารของผู้เช่า ให้โอนมัดจำ (หักค่าปรับแล้ว) แล้วกด “โอนค่ามัดจำคืนแล้ว”'],forfeit:['กล้องชำรุด/เสียหาย?','ไม่คืนมัดจำทั้งสิ้น และย้อนกลับไม่ได้'],lost:['ไม่คืนกล้อง?','ยึดมัดจำทั้งหมด ผู้เช่าจะไม่ได้มัดจำคืน'],reject:['ยังไม่ได้รับเงิน?','รายการจะกลับไปเป็น “รอชำระเงิน” ให้ลูกค้าโอนใหม่']};
   if(labels[d.a]&&!await confirmBox(labels[d.a][0],labels[d.a][1],'ยืนยัน',['delete','cancel','forfeit','lost'].includes(d.a)))return;
   const j=await rpc('adminRental',{rid:d.rid,action:d.a});toast(j.msg);await loadAdmin();await loadStatus();softRender();};
 ACT.setFilter=d=>{ui.filter=d.f;render(false);};
@@ -1595,6 +1641,8 @@ ACT.camSheet=d=>{const c=d&&d.id!==undefined?AD.cams.find(x=>x.id==d.id):null;
   <label class="lb">สถานะ</label><select class="inp" id="cStatus" ${c&&c.status==='rented'?'disabled':''}><option value="available">ว่าง ให้เช่าได้</option><option value="maint" ${c&&c.status==='maint'?'selected':''}>ซ่อมบำรุง (ซ่อนจากการเช่า)</option></select>
   <button class="btn" data-act="saveCam" data-id="${c?c.id:''}">บันทึก</button>
   ${c?`<button class="btn danger" data-act="delCam" data-id="${c.id}">${ic('trash')} ลบกล้อง</button>`:''}<button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);};
+document.addEventListener('input',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.actInput==='bankCheck'&&ACT.bankCheck)ACT.bankCheck();});
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.actInput==='bankCheck'&&ACT.bankCheck)ACT.bankCheck();});
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='cUrl'){const v=e.target.value.trim(),im=$('#cUrlPrev');if(!im)return;if(/^https?:\/\/\S+$/i.test(v)){im.style.display='block';im.src=v;}else im.style.display='none';}});
 ACT.saveCam=async d=>{const j=await rpc('adminCamera',{id:d.id,name:$('#cName').value,imgUrl:($('#cUrl')||{}).value||'',lens:$('#cLens').value,specs:$('#cSpecs').value,price:$('#cPrice').value,deposit:$('#cDep').value,status:$('#cStatus').value});
   toast(j.msg);if(j.ok){closeSheet();await loadAdmin();await loadStatus();softRender();}};
@@ -1618,29 +1666,60 @@ ACT.saveSettings=async()=>{const j=await rpc('adminSettingsSave',{lockerName:$('
   approve:ui.settings.approve?1:0,lateFeeMin:($('#sLate')||{}).value,lateGraceMin:($('#sGrace')||{}).value,lostHours:($('#sLost')||{}).value,slipKey:($('#sSlip')||{}).value||'',unlockMs:Math.round(parseFloat($('#sUnlock').value)*1000),alarmSec:$('#sAlarm').value});toast(j.msg);if(j.ok){ui.settings=null;await loadStatus();render(false);}};
 ACT.testSlip=async()=>{const o=$('#slipTestOut');if(o)o.textContent='กำลังให้ตู้ทดสอบ...';const j=await rpc('adminEasySlipTest');if(o){o.textContent=j.msg||'';o.style.color=j.ok?'var(--ok,#16a34a)':'var(--bad,#dc2626)';}if(j.ok&&j.expiredAt&&o)o.textContent+=' · หมดอายุ '+new Date(j.expiredAt).toLocaleDateString('th-TH');};
 ACT.wdSheet=()=>{if(WAL.bal<1){toast('ไม่มีเงินในกระเป๋าให้ถอน');return;}
+  if(!hasBank(BANK)){toast('กรอกบัญชีธนาคารที่จะรับเงินก่อน');ACT.bankSheet();return;}
   const busy=myRentals.some(r=>r.status==='active');
-  const pp=String((WAL.wd&&WAL.wd.pp)||me.phone||'').replace(/\D/g,'');
-  sheet(`<h2>ถอนเงิน / รับมัดจำคืน</h2><p class="sm muted" style="margin:4px 0 12px">ยอดที่ถอนได้ ${baht(WAL.bal)} ฿ · ผู้ดูแลจะโอนเข้าพร้อมเพย์ที่ระบุ</p>
+  sheet(`<h2>ถอนเงินเข้าบัญชี</h2><p class="sm muted" style="margin:4px 0 12px">ยอดที่ถอนได้ ${baht(WAL.bal)} ฿ · ผู้ดูแลจะโอนเข้าบัญชีของคุณ</p>
     ${busy?`<div class="alert warn">${ic('alert')}<div>ยังมีกล้องที่เช่าอยู่ คืนกล้องก่อนจึงจะถอนได้</div></div>`:''}
+    <div class="card" style="margin:0 0 10px"><div class="xs muted">โอนเข้า</div><div class="sm">${bankLine(BANK)}</div><button class="link xs" data-act="bankSheet">เปลี่ยนบัญชี</button></div>
     <label class="lb">จำนวนเงิน (บาท)</label><input class="inp" id="wdAmt" type="number" min="1" max="${WAL.bal}" inputmode="numeric" value="${WAL.bal}">
-    <label class="lb">พร้อมเพย์ที่รับเงิน (เบอร์ 10 หลัก หรือเลขบัตร 13 หลัก)</label><input class="inp" id="wdPP" inputmode="numeric" maxlength="17" value="${esc(pp)}">
-    <label class="lb">ชื่อบัญชีผู้รับ</label><input class="inp" id="wdName" maxlength="39" value="${esc((WAL.wd&&WAL.wd.name)||me.name||'')}">
-    <p class="xs muted">ตรวจเลขให้ถูกต้อง ถ้าผู้ดูแลโอนไม่ได้ เงินจะกลับเข้ากระเป๋า</p>
     <button class="btn" data-act="wdSend" ${busy?'disabled':''}>ส่งคำขอถอนเงิน</button><button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);};
-ACT.wdSend=async()=>{const amt=Math.trunc(Number(($('#wdAmt')||{}).value||0)),pp=(($('#wdPP')||{}).value||'').replace(/\D/g,''),nm=(($('#wdName')||{}).value||'').trim();
-  if(amt<1||amt>WAL.bal){toast('จำนวนเงินต้องอยู่ระหว่าง 1 – '+baht(WAL.bal)+' บาท');return;}
-  if(pp.length!==10&&pp.length!==13){toast('พร้อมเพย์ต้องเป็น 10 หรือ 13 หลัก');return;}
-  if(nm.length<2){toast('ใส่ชื่อบัญชีผู้รับ');return;}
-  if(!await confirmBox(`ถอน ${baht(amt)} บาท?`,`โอนเข้าพร้อมเพย์ ${fmtPP(pp)} (${esc(nm)})`,'ส่งคำขอ'))return;
-  const j=await rpc('withdraw',{amount:amt,pp,name:nm});toast(j.msg);
+ACT.wdSend=async()=>{const amt=Math.trunc(Number(($('#wdAmt')||{}).value||0));
+  if(!(amt>=1&&amt<=WAL.bal)){toast('จำนวนเงินต้องอยู่ระหว่าง 1 – '+baht(WAL.bal)+' บาท');return;}
+  if(!await confirmBox(`ถอน ${baht(amt)} บาท?`,`โอนเข้า ${bankLine(BANK)}`,'ส่งคำขอ'))return;
+  const j=await rpc('withdraw',{amount:amt});toast(j.msg);
   if(j.ok){WAL.bal=j.wallet;WAL.wd=j.withdraw;closeSheet();await loadMe();softRender();}};
 ACT.wdCancel=async()=>{if(!await confirmBox('ยกเลิกคำขอถอนเงิน?','เงินจะกลับเข้ากระเป๋า','ยกเลิกคำขอ'))return;
   const j=await rpc('withdrawCancel');toast(j.msg);if(j.ok){WAL.bal=j.wallet;WAL.wd=j.withdraw;softRender();}};
 ACT.aWd=async d=>{const x=WDS.find(v=>String(v.u)===String(d.u));if(!x)return;
   const paid=d.a==='paid';
-  if(!await confirmBox(paid?`ยืนยันว่าโอน ${baht(x.w.amount)} บาทแล้ว?`:`ปฏิเสธคำขอ ${baht(x.w.amount)} บาท?`,paid?`เข้าพร้อมเพย์ ${esc(fmtPP(x.w.pp))} (${esc(x.w.name)})`:'เงินจะกลับเข้ากระเป๋าของสมาชิก',paid?'โอนแล้ว':'ปฏิเสธ',!paid))return;
+  if(!await confirmBox(paid?`ยืนยันว่าโอน ${baht(x.w.amount)} บาทแล้ว?`:`ปฏิเสธคำขอ ${baht(x.w.amount)} บาท?`,paid?`เข้า ${bankLine(x.w.to||{})}`:'เงินจะกลับเข้ากระเป๋าของสมาชิก',paid?'โอนแล้ว':'ปฏิเสธ',!paid))return;
   const note=paid?'':(prompt('เหตุผล (แสดงให้ผู้ใช้เห็น)','เลขพร้อมเพย์ไม่ถูกต้อง')||'');
   const j=await rpc('adminWithdraw',{u:x.u,action:d.a,note});toast(j.msg);if(j.ok){const w=await rpc('adminWithdrawals');if(w.ok)WDS=w.items||[];await loadAdmin();softRender();}};
+ACT.bankSheet=()=>{const b=BANK||{};
+  sheet(`<h2>บัญชีรับเงินคืน</h2><p class="sm muted" style="margin:4px 0 12px">ค่ามัดจำ และเงินจากรายการที่ยกเลิก จะโอนคืนเข้าบัญชีนี้โดยตรง ตรวจให้ถูกต้องก่อนบันทึก</p>
+    <label class="lb">ธนาคาร</label><select class="inp" id="bkCode" data-act-input="bankCheck"><option value="">— เลือกธนาคาร —</option>${BANKS.map(x=>`<option value="${x[0]}" ${b.code===x[0]?'selected':''}>${esc(x[1])}</option>`).join('')}</select>
+    <label class="lb" id="bkAcctLb">เลขที่บัญชี</label><input class="inp mono" id="bkAcct" inputmode="numeric" maxlength="20" autocomplete="off" value="${esc(b.acct||'')}" placeholder="ตัวเลขเท่านั้น" data-act-input="bankCheck">
+    <label class="lb">ยืนยันเลขที่บัญชีอีกครั้ง</label><input class="inp mono" id="bkAcct2" inputmode="numeric" maxlength="20" autocomplete="off" value="${esc(b.acct||'')}" data-act-input="bankCheck">
+    <label class="lb">ชื่อ-นามสกุล เจ้าของบัญชี (ตรงกับสมุดบัญชี)</label><input class="inp" id="bkHolder" maxlength="39" value="${esc(b.holder||me.name||'')}" data-act-input="bankCheck">
+    <div class="xs" id="bkMsg" style="min-height:18px;margin:-2px 0 8px"></div>
+    <button class="btn" data-act="bankSave">บันทึกบัญชี</button>${hasBank(b)?`<button class="btn ghost danger" data-act="bankDel">ลบบัญชี</button>`:''}<button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);
+  ACT.bankCheck();};
+ACT.bankCheck=()=>{const c=($('#bkCode')||{}).value,a=(($('#bkAcct')||{}).value||''),a2=(($('#bkAcct2')||{}).value||''),h=(($('#bkHolder')||{}).value||''),m=$('#bkMsg');if(!m)return '';
+  const d=bankDef(c),lb=$('#bkAcctLb');if(lb)lb.textContent=c==='PP'?'เบอร์โทร (10 หลัก) หรือเลขบัตรประชาชน (13 หลัก)':d?`เลขที่บัญชี (${d[2]===d[3]?d[2]:d[2]+'-'+d[3]} หลัก)`:'เลขที่บัญชี';
+  const da=a.replace(/\D/g,''),da2=a2.replace(/\D/g,'');
+  let e=a!==''&&/[^\d\s-]/.test(a)?'เลขบัญชีใส่ได้แค่ตัวเลข':bankErr(c,da,h);
+  if(!e&&da!==da2)e='เลขบัญชีสองช่องไม่ตรงกัน';
+  m.textContent=e?e:'✓ '+bankName(c)+' '+fmtAcct(c,da)+' · '+h.trim();m.style.color=e?'var(--warn)':'var(--ok,#16a34a)';return e;};
+ACT.bankSave=async()=>{const e=ACT.bankCheck();if(e){toast(e);return;}
+  const code=$('#bkCode').value,acct=$('#bkAcct').value.replace(/\D/g,''),holder=$('#bkHolder').value.trim();
+  if(!await confirmBox('ยืนยันบัญชีนี้?',`${esc(bankName(code))} <b class="mono">${esc(fmtAcct(code,acct))}</b><br>${esc(holder)}<br><span class="xs">ถ้าเลขผิด เงินอาจโอนไปผิดบัญชี</span>`,'บันทึก'))return;
+  const j=await rpc('bankSave',{code,acct,holder});toast(j.msg);
+  if(j.ok){BANK=j.bank||{code,acct,holder};closeSheet();await loadMe();softRender();}else ACT.bankSheet();};
+ACT.bankDel=async()=>{if(!await confirmBox('ลบบัญชีรับเงินคืน?','ต้องกรอกใหม่ก่อนรับมัดจำคืนครั้งถัดไป','ลบ',true))return;
+  const j=await rpc('bankSave',{code:'',acct:'',holder:''});toast(j.msg);if(j.ok){BANK={code:'',acct:'',holder:''};softRender();}};
+ACT.copyTxt=d=>{const v=String(d.v||'');(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(()=>toast('คัดลอกแล้ว '+v)).catch(()=>toast(v));};
+ACT.aRefundPaid=d=>{const r=AD.rentals.find(x=>String(x.id)===String(d.rid));if(!r||!r.rf)return;const b=r.rf.to||{},ok=hasBank(b);
+  sheet(`<h2>โอน${r.status==='cancelled'?'เงิน':'ค่ามัดจำ'}คืนแล้ว?</h2><p class="sm muted" style="margin:4px 0 12px">#${r.id} ${esc(r.camName)} · ${esc(r.uname)}</p>
+    <div class="mono" style="font-size:24px;font-weight:600;color:var(--brand)">${baht(r.rf.amount)} ฿</div>
+    <div class="sm" style="margin:4px 0 12px">${ok?'เข้า '+bankLine(b):'<b style="color:var(--warn)">ผู้เช่ายังไม่กรอกบัญชี</b> ต้องใส่หมายเหตุว่าคืนเงินทางไหน'}</div>
+    <label class="lb">${ok?'เลขอ้างอิงการโอน / หมายเหตุ (ไม่บังคับ)':'หมายเหตุ (จำเป็น) เช่น คืนเงินสดแล้ว'}</label><input class="inp" id="rfRef" maxlength="31" placeholder="${ok?'เช่น เลขที่รายการจากสลิป':'คืนเงินสดที่ห้อง ...'}">
+    <p class="xs muted">กดยืนยันหลังจากโอนเงินเรียบร้อยแล้วเท่านั้น ผู้เช่าจะเห็นว่าโอนคืนแล้ว</p>
+    <button class="btn" data-act="aRefundPaidGo" data-rid="${r.id}">${ic('check')} ยืนยัน โอนคืนแล้ว</button><button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);};
+ACT.aRefundPaidGo=async d=>{const ref=(($('#rfRef')||{}).value||'').trim();const r=AD.rentals.find(x=>String(x.id)===String(d.rid));
+  if(r&&!hasBank(r.rf&&r.rf.to)&&ref.length<2){toast('ใส่หมายเหตุว่าคืนเงินอย่างไร');return;}
+  const btn=document.querySelector('[data-act="aRefundPaidGo"]');if(btn)btn.disabled=true;
+  const j=await rpc('adminRental',{rid:d.rid,action:'refundPaid',ref});toast(j.msg);
+  if(j.ok){closeSheet();await loadAdmin();await loadStatus();softRender();}else if(btn)btn.disabled=false;};
 ACT.loadLog=async()=>{const j=await rpc('adminLog');if(j.ok){ui.logs=j;softRender();}};
 ACT.printQR=()=>{const url=appUrl();$('#printqr').innerHTML=`<h1 style="font-size:40px">${esc(S.locker?S.locker.name:'CamLock')}</h1><p style="font-size:20px">สแกนเพื่อเช่า/คืนกล้อง</p>${QR.svg(url)}<p style="font-size:22px;font-family:monospace">${esc(url)}</p>`;window.print();};
 
