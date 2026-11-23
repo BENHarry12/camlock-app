@@ -317,13 +317,17 @@ label.btn input{display:none}
 .feed{max-height:300px;overflow:auto}.feed .it.fresh{animation:fresh 2.5s}
 @keyframes fresh{0%{background:#DFF6EA}100%{background:transparent}}
 .app.wide .cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.app.wide .cards2 .rcard{margin:0}
+.offbar{display:flex;gap:10px;align-items:flex-start;background:#FDEAE0;color:#7D2E0A;border-radius:14px;padding:10px 13px;margin:0 0 12px;font-size:13px;box-shadow:0 0 0 1px rgba(180,65,15,.15)}
+.offbar .xs{margin-top:2px;opacity:.85}
+.pulse-dot{width:10px;height:10px;border-radius:50%;background:#E5484D;flex:none;margin-top:4px;animation:offp 1.4s infinite}
+@keyframes offp{0%{box-shadow:0 0 0 0 rgba(229,72,77,.6)}70%{box-shadow:0 0 0 8px rgba(229,72,77,0)}100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
 </head>
 <body>
 <div class="app" id="app">
-  <div class="scr" id="scr"><div id="v"></div></div>
+  <div class="scr" id="scr"><div id="offBanner"></div><div id="v"></div></div>
   <nav class="tabs hide" id="tabs"></nav>
   <div class="sheet-bg" id="sheetBg"></div>
   <div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
@@ -333,7 +337,7 @@ label.btn input{display:none}
 <!-- ช่องเลือกรูปอยู่นอกส่วนที่วาดใหม่ทุกวินาที ไม่งั้นเลือกรูปแล้วเหตุการณ์หาย -->
 <input type="file" id="filePick" accept="image/*" hidden>
 
-<script src="config.js?v=10"></script>
+<script src="config.js?v=11"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -515,6 +519,7 @@ async function tbCall(msg){
 // เรียกคำสั่งบนตู้: แอป → ThingsBoard RPC → MQTT → ESP32
 async function rpc(method,data){
   const j=await tbCall({kind:'rpc',method,params:Object.assign({t:token},data||{})});
+  if(j&&j.offline)j.msg='ตู้ออฟไลน์อยู่ ทำรายการนี้ไม่ได้ตอนนี้ ระบบจะแจ้งเมื่อตู้กลับมา';
   if(j&&j.ok!==true&&!j.msg)j.msg=j.error==='unknown method'?'ตู้ยังใช้เฟิร์มแวร์เก่า กรุณาอัปโหลด camlock.ino ตัวใหม่ลงบอร์ด':(j.error||'ตู้ตอบกลับผิดพลาด');
   if(j.offline)online=false;
   if(j&&j.code===401&&token){logoutLocal('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');}
@@ -564,18 +569,42 @@ function onPush(m){
   if(m.push==='live'){live=!!m.on;return;}
   lastPushAt=Date.now();
   if(m.push==='ts')mergeTs(m.data,true);else if(m.push==='attr')mergeAttr(m.data);
-  applyRaw();softRender();
+  applyRaw();watchOnline();softRender();
 }
 async function loadStatus(){
-  if(!BRIDGE){online=false;return;}
+  if(!BRIDGE){online=false;statusKnown=true;tbReachable=false;return;}
   try{
     const j=await tbCall({kind:'status'});
-    if(!j.ok){online=false;lastErr=j.msg;return;}
+    if(!j.ok){online=false;tbReachable=false;lastErr=j.msg;return;}
+    tbReachable=true;
     mergeTs(j.timeseries,false);mergeAttr(j.attributes||[]);applyRaw();
-  }catch(e){online=false;lastErr=e.message;}
+  }catch(e){online=false;tbReachable=false;lastErr=e.message;}
+  finally{statusKnown=true;watchOnline();}
 }
-async function loadMe(){if(!token)return;const j=await rpc('me');if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;}return j;}
-async function loadAdmin(){if(!isAdmin())return;const j=await rpc('adminOverview');if(j.ok)AD=j;return j;}
+/* ---------- ตู้ออฟไลน์: ยังเปิดเว็บได้ ใช้ข้อมูลล่าสุดที่จำไว้ และแจ้งเตือนชัด ๆ ---------- */
+let statusKnown=false, tbReachable=true, wasOnline=null, usingCache=false;
+function saveCache(k,v){try{localStorage.setItem(k,JSON.stringify(Object.assign({savedAt:Date.now()},v)));}catch(e){}}
+function readCache(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+function watchOnline(){
+  if(wasOnline===false&&online){toast('ตู้กลับมาออนไลน์แล้ว');usingCache=false;Promise.all([loadMe(),loadAdmin()]).then(()=>softRender());}
+  if(wasOnline===true&&!online)toast('⚠ ตู้ออฟไลน์ — ระบบกำลังรอให้ตู้เชื่อมต่อใหม่');
+  wasOnline=online;renderBanner();
+}
+function renderBanner(){
+  const b=$('#offBanner');if(!b)return;
+  if(!statusKnown||online){b.innerHTML='';return;}
+  const last=S.lastSeen?'ออนไลน์ล่าสุด '+dur((Date.now()-S.lastSeen)/1000)+'ที่แล้ว ('+tHM(Math.floor(S.lastSeen/1000))+' น.)':'ยังไม่เคยเชื่อมต่อ';
+  b.innerHTML=`<div class="offbar"><span class="pulse-dot"></span><div><b>${tbReachable?'ตู้ออฟไลน์':'เชื่อม ThingsBoard ไม่ได้'}</b> · ${tbReachable?last:'ตรวจอินเทอร์เน็ตของมือถือ'}
+    <div class="xs">${usingCache?'แสดงข้อมูลล่าสุดที่จำไว้ ':''}ดูข้อมูลได้ แต่เข้าสู่ระบบ เช่า เปิดตู้ และคืนกล้องต้องรอตู้กลับมาออนไลน์ · ระบบเชื่อมใหม่ให้เอง</div></div></div>`;
+}
+async function loadMe(){if(!token)return;const j=await rpc('me');
+  if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;usingCache=false;saveCache('cl_me',{user:me,rentals:myRentals,cams});}
+  else if(!me&&j.code!==401){const c=readCache('cl_me');if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];usingCache=true;}}
+  return j;}
+async function loadAdmin(){if(!isAdmin())return;const j=await rpc('adminOverview');
+  if(j.ok){AD=j;saveCache('cl_ad',j);}
+  else if(!AD.rentals.length){const c=readCache('cl_ad');if(c&&c.rentals){AD=c;usingCache=true;}}
+  return j;}
 const isAdmin=()=>me&&me.admin;
 const appUrl=()=>CFG.appUrl||(location.origin+location.pathname.replace(/index\.html$/,''));
 const openRental=()=>myRentals.find(r=>['await','verify','ready','active'].includes(r.status));
@@ -622,7 +651,7 @@ function render(scrollTop){
   if(!me)html=viewAuth();
   else{const c=cur();html=(VIEWS[c.name]||VIEWS.home)(c.params);}
   v.innerHTML=html;
-  renderTabs();
+  renderTabs();renderBanner();
   if(scrollTop)$('#scr').scrollTop=0;
   if(AFTER[cur().name])AFTER[cur().name]();
 }
@@ -660,6 +689,7 @@ function viewAuth(){
       <button class="btn" style="margin-top:14px" type="submit" id="authBtn">${reg?'สมัครและเข้าสู่ระบบ':'เข้าสู่ระบบ'}</button>
     </form>
     <p class="center sm muted" style="margin-top:16px">${reg?'มีบัญชีแล้ว?':'ยังไม่มีบัญชี?'} <button class="link" data-act="authToggle">${reg?'เข้าสู่ระบบ':'สมัครสมาชิก'}</button></p>
+    ${statusKnown&&!online&&BRIDGE?`<div class="alert warn" style="margin-top:12px">${ic('wifi')}<div>ตู้ออฟไลน์อยู่ บัญชีผู้ใช้เก็บในตู้ จึงเข้าสู่ระบบ/สมัครได้เมื่อตู้กลับมาออนไลน์</div></div>`:''}
     ${!BRIDGE?`<div class="alert warn" style="margin-top:12px">${ic('alert')}<div>ยังไม่ได้ตั้งค่า <b>bridgeUrl</b> ใน config.js ดู README</div></div>`:(lastErr&&!online?`<div class="alert warn" style="margin-top:12px">${ic('alert')}<div>${esc(lastErr)}</div></div>`:'')}
     <p class="foot">${S.locker?esc(S.locker.name+' · '+S.locker.loc)+' · '+(online?'ตู้ออนไลน์':'ตู้ออฟไลน์'):'กำลังเชื่อม ThingsBoard…'}</p>
   </div>`;
@@ -1238,7 +1268,7 @@ ACT.pwSheet=()=>{sheet(`<h2>เปลี่ยนรหัสผ่าน</h2><d
 ACT.doPw=async()=>{const n=$('#pwNew').value;if(n!==$('#pwNew2').value){toast('รหัสผ่านใหม่ไม่ตรงกัน');return;}
   const j=await rpc('password',{old:$('#pwOld').value,new:n});toast(j.msg);if(j.ok){closeSheet();await loadAdmin();softRender();}};
 ACT.logout=async()=>{await rpc('logout');logoutLocal('ออกจากระบบแล้ว');};
-function logoutLocal(msg){token='';ui.authMode='login';ui.vphoto={};localStorage.removeItem('cl_t');me=null;myRentals=[];AD={users:[],cams:[],rentals:[]};ui.settings=null;ui.logs=null;route={tab:'home',stack:[]};render(true);if(msg)toast(msg);}
+function logoutLocal(msg){try{localStorage.removeItem('cl_me');localStorage.removeItem('cl_ad');}catch(e){}token='';ui.authMode='login';ui.vphoto={};localStorage.removeItem('cl_t');me=null;myRentals=[];AD={users:[],cams:[],rentals:[]};ui.settings=null;ui.logs=null;route={tab:'home',stack:[]};render(true);if(msg)toast(msg);}
 
 // ผู้ดูแล
 ACT.aUnlock=async()=>{const j=await rpc('adminUnlock');toast(j.ok?'ปลดล็อกแล้ว กดอีกครั้งเพื่อล็อก':j.msg);if(j.ok){S.unlocking=true;S.door='open';}softRender();};
@@ -1302,6 +1332,8 @@ document.addEventListener('submit',async e=>{
 let tick=0;
 async function loop(){
   tick++;
+  if(online&&S.lastSeen&&Date.now()-S.lastSeen>35000){online=false;watchOnline();softRender();}
+  else if(!online&&statusKnown&&tick%5===0)renderBanner();
   const c=cur().name, fast=c==='open';
   if(live?(tick%15===0):(fast||tick%3===0))await loadStatus();
   else if(cur().name==='a_home'){const t=$('#lastSeen');if(t)t.textContent=S.lastSeen?dur((Date.now()-S.lastSeen)/1000)+'ที่แล้ว':'-';}
@@ -1317,7 +1349,7 @@ async function loop(){
 async function boot(){
   ui.booting=!!token;render(true);
   await loadStatus();
-  if(token){const j=await loadMe();if(j&&j.ok){await loadAdmin();route={tab:isAdmin()?'a_home':'home',stack:[]};}else if(j&&j.msg&&/เข้าสู่ระบบ/.test(j.msg))logoutLocal();}
+  if(token){const j=await loadMe();if(me){await loadAdmin();route={tab:isAdmin()?'a_home':'home',stack:[]};}else if(j&&j.code===401)logoutLocal();}
   ui.booting=false;render(true);loop();
 }
 
