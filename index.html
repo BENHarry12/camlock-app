@@ -349,6 +349,9 @@ label.btn input{display:none}
   .cams-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.cams-grid .cam{margin:0}
 }
 .narrow{max-width:880px;margin:0 auto}
+.ppacc{background:var(--surf2);border-radius:14px;padding:4px 12px;margin:10px 0 0;text-align:left;font-size:13px}
+.ppacc>div{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.ppacc>div:last-child{border:0}
+.ppacc span{color:var(--ink3);width:70px;flex:none}.ppacc b{flex:1;min-width:0;font-weight:600}.ppacc .btn.sm{padding:5px 10px;font-size:12px}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
@@ -481,6 +484,7 @@ const I={
  list:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
  qr:'<rect x="3.5" y="3.5" width="6" height="6" rx="1"/><rect x="14.5" y="3.5" width="6" height="6" rx="1"/><rect x="3.5" y="14.5" width="6" height="6" rx="1"/><path d="M14.5 14.5h2v2h-2zM18.5 18.5h2v2h-2zM18.5 14.5h2M14.5 18.5v2"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>', download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
  alert:'<path d="M12 3 2 20h20z"/><path d="M12 10v4.5M12 17.3v.2"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.7v.2"/>',
  wallet:'<rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2"/>', refresh:'<path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4"/>',
  door:'<path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17M3 21h18"/><circle cx="15" cy="12.5" r="1"/>', power:'<path d="M12 3v8M6.3 6.3a8 8 0 1 0 11.4 0"/>',
@@ -573,6 +577,8 @@ function mergeAttr(data){
   if(Array.isArray(data))data.forEach(x=>RA[x.key]=parseVal(x.value));
   else for(const [k,arr] of Object.entries(data||{}))RA[k]=parseVal(Array.isArray(arr)&&arr.length?(Array.isArray(arr[0])?arr[0][1]:arr[0].value):arr);
 }
+// บัญชีรับเงินเริ่มต้น (ใช้เมื่อตู้ยังไม่ได้ส่งค่าที่ตั้งไว้มา)
+const SHOP_PP={id:'0649682424',name:'ภานุวัฒน์ ลิ้มประยูร (Panuwat Limprayoon)'};
 function applyRaw(){
   const v=k=>RT[k]?parseVal(RT[k].value):null, b=k=>v(k)===true, n=k=>Number(v(k)||0), A=RA;
   const ts=Math.max(0,...Object.values(RT).map(x=>x.ts||0));
@@ -582,7 +588,7 @@ function applyRaw(){
     available:n('available'),cams:n('camCount'),unlocks:n('unlockCount'),rssi:n('rssi'),uptime:n('uptime'),heap:n('heap'),
     activeCount:n('activeCount'),overdueCount:n('overdueCount'),readyCount:n('readyCount'),pendingPay:n('pendingPay'),
     pendingVerify:n('pendingVerify'),refundPending:n('refundPending'),members:n('members'),hasCounts:RT.activeCount!=null,
-    ssid:A.ssid||'',ip:A.ip||'',promptpay:String(A.promptpay||''),approve:A.approve!==false,unlockMs:A.unlockMs||3000,
+    ssid:A.ssid||'',ip:A.ip||'',promptpay:String(A.promptpay||SHOP_PP.id),ppName:String(A.ppName||(A.promptpay?'':SHOP_PP.name)),approve:A.approve!==false,unlockMs:A.unlockMs||3000,
     easyslip:A.easyslip===true||A.easyslip==='true',reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts,uptimeTs:RT.uptime?RT.uptime.ts:0};
 }
 // เหตุการณ์สดจากตู้ (ทุกบรรทัดของบันทึก) → ฟีดแดชบอร์ด + ดึงข้อมูลใหม่ทันที
@@ -801,13 +807,16 @@ VIEWS.camDetail=p=>{
     ${me.verify==='ok'||me.admin?`<button class="btn" data-act="doRent" data-id="${c.id}">จองและไปชำระเงิน</button>`:`<button class="btn amber" data-go="verify">${ic('shield')} ${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนเพื่อจอง'}</button>`}`;
 };
 
+function fmtPP(id){id=String(id||'');return id.length===10?id.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1-$2-$3'):id.length===13?id.replace(/^(\d)(\d{4})(\d{5})(\d{2})(\d)$/,'$1-$2-$3-$4-$5'):id;}
 function payBlock(r){
   const due=owed(r);
   if(!S.promptpay)return `<div class="alert amber">${ic('info')}<div>ตู้นี้ยังไม่ได้ตั้งเลขพร้อมเพย์ กรุณาชำระ <b>${baht(due)} ฿</b> กับผู้ดูแลโดยตรง แล้วกด “ฉันชำระแล้ว”</div></div>`;
   let q='';try{q=QR.svg(promptpayPayload(S.promptpay,due));}catch(e){q='';}
   return `<div class="card center"><div class="pp">${ic('qr')} PromptPay</div><div class="xs muted">สแกนจ่ายจากแอปธนาคาร ยอดถูกใส่ไว้ให้แล้ว</div>
-    <div class="qr">${q}</div><div class="mono" style="font-size:22px;font-weight:600;color:var(--brand)">${baht(due)}.00 ฿</div>
-    <div class="xs muted">พร้อมเพย์ ${esc(S.promptpay.replace(/^(\d{3})(\d{3})(\d+)$/,'$1-$2-$3'))}</div></div>`;
+    <div class="qr" id="payQR">${q}</div><div class="mono" style="font-size:22px;font-weight:600;color:var(--brand)">${baht(due)}.00 ฿</div>
+    <div class="ppacc"><div><span>ชื่อบัญชี</span><b>${esc(S.ppName||'-')}</b></div>
+      <div><span>พร้อมเพย์</span><b class="mono">${esc(fmtPP(S.promptpay))}</b><button class="btn sm ghost" data-act="copyPP">${ic('copy')} คัดลอก</button></div></div>
+    <button class="btn sm ghost" style="margin:10px auto 0" data-act="saveQR" data-amt="${due}">${ic('download')} บันทึกรูป QR</button></div>`;
 }
 
 function slipBlock(r){
@@ -1270,7 +1279,8 @@ VIEWS.a_set=()=>{
     <label class="lb">ที่ตั้ง</label><input class="inp" id="sLoc" value="${esc(s.lockerLoc)}" maxlength="30">
     <label class="lb">หมายเหตุ (เวลาเปิด ฯลฯ)</label><input class="inp" id="sNote" value="${esc(s.lockerNote)}" maxlength="40"></div>
   <div class="card"><h3 style="margin-bottom:10px">การชำระเงิน</h3>
-    <label class="lb">พร้อมเพย์ของร้าน (เบอร์ 10 หลัก หรือเลขบัตร 13 หลัก)</label><input class="inp" id="sPP" value="${esc(s.promptpay)}" inputmode="numeric" maxlength="17" placeholder="เว้นว่าง = ชำระกับผู้ดูแล">
+    <label class="lb">พร้อมเพย์ของร้าน (เบอร์ 10 หลัก หรือเลขบัตร 13 หลัก)</label><input class="inp" id="sPP" value="${esc(s.promptpay)}" inputmode="numeric" maxlength="17" placeholder="เบอร์หรือเลขบัตรประชาชน">
+    <label class="lb">ชื่อบัญชีที่รับเงิน (แสดงในหน้าชำระเงิน และใช้ตรวจสลิป)</label><input class="inp" id="sPPName" value="${esc(s.ppName||'')}" maxlength="60">
     <label class="lb">EasySlip API key (ตรวจสลิปอัตโนมัติ) ${s.slipKeySet?'<span class="tag ok">ตั้งค่าแล้ว</span>':'<span class="tag grey">ยังไม่ได้ตั้ง</span>'}</label>
     <input class="inp" id="sSlip" type="password" autocomplete="off" placeholder="${s.slipKeySet?'เว้นว่าง = ใช้ key เดิม · พิมพ์ - เพื่อลบ':'วาง API key จาก developer.easyslip.com'}">
     <div class="row" style="margin-top:4px"><div class="grow"><b>ผู้ดูแลต้องยืนยันยอดก่อนเปิดตู้</b><div class="xs muted">แนะนำให้เปิดไว้ ระบบไม่สามารถเช็คยอดเข้าบัญชีเองได้</div></div><button class="toggle ${s.approve?'on':''}" id="sApprove" data-act="toggleApprove"></button></div></div>
@@ -1307,6 +1317,16 @@ ACT.verifySubmit=async(d,b)=>{b.disabled=true;const j=await rpc('verifySubmit',{
 ACT.doRent=async(d,b)=>{b.disabled=true;const j=await rpc('rent',{cam:d.id,hours:ui.hours});b.disabled=false;
   if(!j.ok){toast(j.msg);return;}await loadMe();route={tab:'active',stack:[{name:'pay',params:{rid:j.rental.id}}]};render(true);};
 ACT.goPay=d=>push('pay',{rid:+d.rid});
+ACT.copyPP=async()=>{try{await navigator.clipboard.writeText(S.promptpay);toast('คัดลอกเลขพร้อมเพย์แล้ว');}catch(e){toast(S.promptpay);}};
+ACT.saveQR=async d=>{const svg=$('#payQR svg');if(!svg)return;try{
+  const x=new XMLSerializer().serializeToString(svg).replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"').replace(/^(<svg[^>]*xmlns="http:\/\/www.w3.org\/2000\/svg"[^>]*) xmlns="http:\/\/www.w3.org\/2000\/svg"/,'$1');
+  const img=new Image();img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(x);await img.decode();
+  const c=document.createElement('canvas');c.width=720;c.height=880;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,720,880);
+  g.fillStyle='#0F3A68';g.font='bold 40px sans-serif';g.textAlign='center';g.fillText('PromptPay',360,70);g.drawImage(img,110,100,500,500);
+  g.fillStyle='#0C5A5F';g.font='bold 46px sans-serif';g.fillText(baht(+d.amt)+'.00 บาท',360,680);
+  g.fillStyle='#333';g.font='28px sans-serif';g.fillText(S.ppName||'',360,740);g.fillText('พร้อมเพย์ '+fmtPP(S.promptpay),360,785);
+  const a=document.createElement('a');a.download='camlock-promptpay-'+d.amt+'.png';a.href=c.toDataURL('image/png');a.click();toast('บันทึกรูป QR แล้ว');
+}catch(e){toast('บันทึกรูปไม่ได้ ลองแคปหน้าจอแทน');}};
 ACT.goActive=()=>go('active');
 ACT.payNotify=async(d,b)=>{b.disabled=true;const j=await rpc('pay',{rid:d.rid});if(!j.ok){b.disabled=false;toast(j.msg);return;}await loadMe();
   toast(j.rental.paid>=j.rental.amount?'ชำระเรียบร้อย':'ส่งแจ้งชำระแล้ว รอผู้ดูแลตรวจสอบ');render(false);};
@@ -1382,7 +1402,7 @@ ACT.aUserPw=d=>{const u=userOf(d.idx);sheet(`<h2>ตั้งรหัสผ่�
 ACT.doUserPw=async d=>{const j=await rpc('adminUser',{idx:d.idx,action:'password',pass:$('#uPw').value});toast(j.msg);if(j.ok)closeSheet();};
 ACT.loadSettings=async()=>{const j=await rpc('adminSettings');if(j.ok){ui.settings=j;render(false);}};
 ACT.toggleApprove=(d,b)=>{ui.settings.approve=!ui.settings.approve;b.classList.toggle('on',ui.settings.approve);};
-ACT.saveSettings=async()=>{const j=await rpc('adminSettingsSave',{lockerName:$('#sName').value,lockerLoc:$('#sLoc').value,lockerNote:$('#sNote').value,promptpay:$('#sPP').value,
+ACT.saveSettings=async()=>{const j=await rpc('adminSettingsSave',{lockerName:$('#sName').value,lockerLoc:$('#sLoc').value,lockerNote:$('#sNote').value,promptpay:$('#sPP').value,ppName:($('#sPPName')||{}).value||'',
   approve:ui.settings.approve?1:0,slipKey:($('#sSlip')||{}).value||'',unlockMs:Math.round(parseFloat($('#sUnlock').value)*1000),alarmSec:$('#sAlarm').value});toast(j.msg);if(j.ok){ui.settings=null;await loadStatus();render(false);}};
 ACT.loadLog=async()=>{const j=await rpc('adminLog');if(j.ok){ui.logs=j;softRender();}};
 ACT.printQR=()=>{const url=appUrl();$('#printqr').innerHTML=`<h1 style="font-size:40px">${esc(S.locker?S.locker.name:'CamLock')}</h1><p style="font-size:20px">สแกนเพื่อเช่า/คืนกล้อง</p>${QR.svg(url)}<p style="font-size:22px;font-family:monospace">${esc(url)}</p>`;window.print();};
