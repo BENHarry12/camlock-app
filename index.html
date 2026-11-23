@@ -353,7 +353,8 @@ label.btn input{display:none}
 .ppacc>div{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.ppacc>div:last-child{border:0}
 .ppacc span{color:var(--ink3);width:70px;flex:none}.ppacc b{flex:1;min-width:0;font-weight:600}.ppacc .btn.sm{padding:5px 10px;font-size:12px}
 .cam .ph{width:56px;height:56px}
-.camimg{width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none;background:var(--surf2);display:block}
+.camimg{width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none;background:#fff;display:block}
+.camimg.big{object-fit:contain;background:#fff;box-shadow:var(--sh)}
 .cam .ph.big,.camimg.big{width:100%;height:220px;border-radius:18px;margin-bottom:12px}
 .ph.big{display:grid;place-items:center;background:var(--brandSoft);color:var(--brand)}.ph.big svg{width:56px;height:56px}
 .avimg{width:56px;height:56px;border-radius:18px;object-fit:cover;flex:none;display:block}
@@ -790,8 +791,22 @@ function getPhoto(kind,id,ver){
     if(j.ok&&j.img){PH[k]=j.img;try{Object.keys(localStorage).filter(x=>x.startsWith('ph_'+kind+id+'_')&&x!==k).forEach(x=>localStorage.removeItem(x));localStorage.setItem(k,j.img);}catch(e){}softRender();}
     else setTimeout(()=>{delete phLoading[k];},30000);})();}
   return null;}
+/* รูปสินค้าตามชื่อรุ่น (ภาพสัญญาอนุญาตเสรีจาก Wikimedia Commons ต้องให้เครดิตผู้ถ่าย)
+   ใช้เมื่อผู้ดูแลยังไม่ได้อัปโหลดรูปกล้องตัวจริง · เพิ่มรุ่นใหม่: ใส่ {m: คำในชื่อรุ่น, f: ชื่อไฟล์บน Commons, by, lic} */
+const CAM_CATALOG=[
+  {m:/eos\s*r50/i,f:'Canon EOS R50 (52694437103).jpg',by:'Henry Söderlund',lic:'CC BY 2.0'},
+  {m:/zv-?e10/i,f:'Sony ZV-E10 with Sony E 16-50mm F3.5-5.6 OSS PZ - by Henry Söderlund (51375243603).jpg',by:'Henry Söderlund',lic:'CC BY 2.0'},
+  {m:/x-?t30/i,f:'Fujifilm X-T30 27 Mar 2019c.jpg',by:'昼落ち',lic:'CC BY-SA 4.0',note:'ภาพรุ่น X-T30 (ตัวเดียวกับ X-T30 II ภายนอกเหมือนกัน)'},
+  {m:/gopro|hero\s*1[0-3]/i,f:'GoPro Hero 8 Black and Hero 11 Black.JPG',by:'Benlisquare',lic:'CC BY-SA 4.0',note:'ภาพรุ่น HERO11 / HERO8 (ทรงเดียวกับ HERO12)'}];
+const catalogOf=c=>c&&CAM_CATALOG.find(x=>x.m.test(c.name||''));
+const commonsUrl=(f,w)=>'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(f)+'?width='+w;
+function camCredit(c){if(!c||getPhoto('c',c.id,c.ph))return '';const k=catalogOf(c);if(!k)return '';
+  return `<div class="xs muted" style="margin:-6px 0 10px">ภาพตัวอย่างรุ่นนี้ · ${esc(k.by)} / ${esc(k.lic)} · <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(k.f.replace(/ /g,'_'))}" target="_blank" rel="noopener">Wikimedia Commons</a>${k.note?' · '+esc(k.note):''}</div>`;}
 function camThumb(c,big){const src=getPhoto('c',c.id,c.ph);
-  return src?`<img class="camimg${big?' big':''}" src="${src}" alt="${esc(c.name)}">`:`<span class="ph${big?' big':''}">${ic('cam')}</span>`;}
+  if(src)return `<img class="camimg${big?' big':''}" src="${src}" alt="${esc(c.name)}">`;
+  const k=catalogOf(c);
+  if(k)return `<img class="camimg${big?' big':''}" src="${commonsUrl(k.f,big?800:240)}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">`;
+  return `<span class="ph${big?' big':''}">${ic('cam')}</span>`;}
 function avatarHtml(u,cls=''){const src=u&&getPhoto('a',u.idx,u.av);
   if(src)return `<img class="avimg ${cls}" src="${src}" alt="">`;
   const ini=((u&&(u.name||u.sid))||'?').split(' ').map(s=>s[0]).join('').slice(0,2);
@@ -876,7 +891,7 @@ VIEWS.camDetail=p=>{
   const H=[2,4,6,8,12,24,48,72];if(!H.includes(ui.hours))ui.hours=6;
   const rent=c.price*ui.hours, due=nowS()+ui.hours*3600;
   return `<div class="back"><button data-act="back">${ic('left')}</button><h2>รายละเอียดการเช่า</h2></div>
-    <div style="margin-top:12px">${camThumb(c,true)}</div>
+    <div style="margin-top:12px">${camThumb(c,true)}${camCredit(c)}</div>
     <div class="cam sel"><span style="flex:1"><span class="nm">${esc(c.name)}</span><span class="ln" style="display:block">+ ${esc(c.lens)}</span></span><span class="price"><b>${baht(c.price)}฿</b><span class="xs muted">/ชม.</span></span></div>
     <div class="card"><h3 style="margin-bottom:10px">เช่ากี่ชั่วโมง</h3>
       <div class="hrs">${H.map(h=>`<button class="${h===ui.hours?'on':''}" data-act="setHours" data-h="${h}">${h}</button>`).join('')}</div>
@@ -1056,7 +1071,7 @@ VIEWS.active=()=>{
         :last.deposit?`<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div>มัดจำที่จะได้คืน ${baht(refundable(last))} ฿ รอผู้ดูแลตรวจสภาพ แล้วคืนเข้ากระเป๋า</div></div>`:''}</div>`:''}`;}
   const d=doorLine();
   const cm=cams.find(c=>c.id===r.cam);
-  const details=`<div class="card">${cm&&cm.ph?camThumb(cm,true):''}<div class="kv"><span>กล้อง</span><b>${esc(r.camName)}</b></div><div class="kv"><span>รับ/คืนที่</span><b>${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</b></div>
+  const details=`<div class="card">${cm&&(cm.ph||catalogOf(cm))?camThumb(cm,true)+camCredit(cm):''}<div class="kv"><span>กล้อง</span><b>${esc(r.camName)}</b></div><div class="kv"><span>รับ/คืนที่</span><b>${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</b></div>
       <div class="kv"><span>ระยะเวลา</span><b>${r.hours} ชม.</b></div><div class="kv"><span>มัดจำ</span><b class="mono">${baht(r.deposit)} ฿</b></div>
       ${owed(r)?`<div class="kv"><span>ยอดค้างชำระ</span><b class="mono" style="color:var(--warn)">${baht(owed(r))} ฿</b></div>`:''}</div>`;
   if(r.status==='await'||r.status==='verify')return `<div class="top"><div class="grow"><div class="hello">รายการ #${r.id}</div><h1>${ST[r.status][0]}</h1></div></div>
