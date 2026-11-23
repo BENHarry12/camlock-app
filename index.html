@@ -1442,6 +1442,7 @@ VIEWS.a_set=()=>{
     <label class="lb">ชื่อบัญชีที่รับเงิน (แสดงในหน้าชำระเงิน และใช้ตรวจสลิป)</label><input class="inp" id="sPPName" value="${esc(s.ppName||'')}" maxlength="60">
     <label class="lb">EasySlip API key (ตรวจสลิปอัตโนมัติ) ${s.slipKeySet?'<span class="tag ok">ตั้งค่าแล้ว</span>':'<span class="tag grey">ยังไม่ได้ตั้ง</span>'}</label>
     <input class="inp" id="sSlip" type="password" autocomplete="off" placeholder="${s.slipKeySet?'เว้นว่าง = ใช้ key เดิม · พิมพ์ - เพื่อลบ':'วาง API key จาก developer.easyslip.com'}">
+    <div class="row" style="margin:6px 0 10px"><button class="btn sm ghost" data-act="testSlip">ทดสอบการเชื่อม EasySlip</button><div class="xs muted grow" id="slipTestOut">กดเพื่อให้ตู้ลองเรียก EasySlip (ไม่เสียโควตา)</div></div>
     <div class="row" style="margin-top:4px"><div class="grow"><b>ผู้ดูแลต้องยืนยันยอดก่อนเปิดตู้</b><div class="xs muted">แนะนำให้เปิดไว้ ระบบไม่สามารถเช็คยอดเข้าบัญชีเองได้</div></div><button class="toggle ${s.approve?'on':''}" id="sApprove" data-act="toggleApprove"></button></div></div>
   <div class="card"><h3 style="margin-bottom:10px">กลอนและประตู</h3>
     <div class="grid2" style="margin:0"><div><label class="lb">กลอนเปิดค้างสูงสุด (วินาที)</label><input class="inp" id="sUnlock" type="number" min="3" max="60" step="1" value="${s.unlockMs/1000}"></div>
@@ -1592,6 +1593,7 @@ ACT.loadSettings=async()=>{const j=await rpc('adminSettings');if(j.ok){ui.settin
 ACT.toggleApprove=(d,b)=>{ui.settings.approve=!ui.settings.approve;b.classList.toggle('on',ui.settings.approve);};
 ACT.saveSettings=async()=>{const j=await rpc('adminSettingsSave',{lockerName:$('#sName').value,lockerLoc:$('#sLoc').value,lockerNote:$('#sNote').value,promptpay:$('#sPP').value,ppName:($('#sPPName')||{}).value||'',
   approve:ui.settings.approve?1:0,lateFeeMin:($('#sLate')||{}).value,lateGraceMin:($('#sGrace')||{}).value,lostHours:($('#sLost')||{}).value,slipKey:($('#sSlip')||{}).value||'',unlockMs:Math.round(parseFloat($('#sUnlock').value)*1000),alarmSec:$('#sAlarm').value});toast(j.msg);if(j.ok){ui.settings=null;await loadStatus();render(false);}};
+ACT.testSlip=async()=>{const o=$('#slipTestOut');if(o)o.textContent='กำลังให้ตู้ทดสอบ...';const j=await rpc('adminEasySlipTest');if(o){o.textContent=j.msg||'';o.style.color=j.ok?'var(--ok,#16a34a)':'var(--bad,#dc2626)';}if(j.ok&&j.expiredAt&&o)o.textContent+=' · หมดอายุ '+new Date(j.expiredAt).toLocaleDateString('th-TH');};
 ACT.loadLog=async()=>{const j=await rpc('adminLog');if(j.ok){ui.logs=j;softRender();}};
 ACT.printQR=()=>{const url=appUrl();$('#printqr').innerHTML=`<h1 style="font-size:40px">${esc(S.locker?S.locker.name:'CamLock')}</h1><p style="font-size:20px">สแกนเพื่อเช่า/คืนกล้อง</p>${QR.svg(url)}<p style="font-size:22px;font-family:monospace">${esc(url)}</p>`;window.print();};
 
