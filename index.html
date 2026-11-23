@@ -23,12 +23,25 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
-body{background:#D9E1E5;font-family:var(--fb);color:var(--ink);font-size:15px;line-height:1.5;display:flex;align-items:center;justify-content:center}
+body{background:var(--bg);font-family:var(--fb);color:var(--ink);font-size:15px;line-height:1.5}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 .app{position:relative;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;overflow:clip}
-@media(min-width:600px){.app{width:390px;height:min(844px,calc(100vh - 40px));border-radius:44px;box-shadow:0 30px 80px rgba(14,26,32,.25),0 0 0 10px #0E1A20}}
-.scr{flex:1;overflow-y:auto;overflow-x:hidden;padding:max(18px,env(safe-area-inset-top)) 18px 24px;scroll-behavior:smooth}
+.app{height:100vh;height:100dvh}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;padding:max(18px,env(safe-area-inset-top)) max(18px,calc((100% - 760px)/2)) 24px;scroll-behavior:smooth}
+/* ---------- ปรับตามขนาดจอ: มือถือ = แถบล่าง, แท็บเล็ต/คอม = แถบเมนูด้านข้าง ---------- */
+@media(min-width:900px){
+  .app{flex-direction:row}
+  .tabs{order:-1;flex-direction:column;justify-content:flex-start;gap:6px;width:96px;flex:none;border-top:0;border-right:1px solid var(--line);padding:22px 8px}
+  .tabs button{flex:none;padding:10px 0;border-radius:14px;font-size:12px}
+  .tabs button.on{background:var(--brandSoft)}
+  .tabs button .badge{margin:-4px 0 0 22px}
+  .scr{padding:28px max(28px,calc((100% - 820px)/2)) 32px}
+  .stage{height:420px}
+  .sheet{left:50%;right:auto;width:min(560px,94%);bottom:auto;top:50%;border-radius:26px;max-height:86%;transform:translate(-50%,-40%);opacity:0;transition:transform .25s,opacity .25s,visibility 0s .25s}
+  .sheet.on{transform:translate(-50%,-50%);opacity:1;transition:transform .25s,opacity .25s}
+  .sheet .grab{display:none}
+}
 .scr::-webkit-scrollbar{display:none}
 .tabs{display:flex;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 6px max(10px,env(safe-area-inset-bottom))}
 .tabs button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--ink3);padding:4px 0;font-weight:500}
@@ -260,7 +273,7 @@ h3{font-size:16px;font-weight:600}
 label.btn input{display:none}
 .evcard .vthumb{margin:10px 0 0}
 /* ---------- แดชบอร์ด ---------- */
-@media(min-width:900px){.app.wide{width:min(1360px,97vw);height:calc(100vh - 32px);border-radius:26px}.app.wide .scr{padding:24px 28px}.app.wide .tabs{justify-content:center}.app.wide .tabs button{max-width:130px}}
+@media(min-width:900px){.app.wide .scr{padding:24px max(28px,calc((100% - 1440px)/2))}}
 .dash-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .dash-head h1{font-size:23px}
 .app.wide .dash-head h1{font-size:28px}
