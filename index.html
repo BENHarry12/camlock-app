@@ -337,7 +337,7 @@ label.btn input{display:none}
 <!-- ช่องเลือกรูปอยู่นอกส่วนที่วาดใหม่ทุกวินาที ไม่งั้นเลือกรูปแล้วเหตุการณ์หาย -->
 <input type="file" id="filePick" accept="image/*" hidden>
 
-<script src="config.js?v=11"></script>
+<script src="config.js?v=12"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -548,7 +548,7 @@ function mergeAttr(data){
 function applyRaw(){
   const v=k=>RT[k]?parseVal(RT[k].value):null, b=k=>v(k)===true, n=k=>Number(v(k)||0), A=RA;
   const ts=Math.max(0,...Object.values(RT).map(x=>x.ts||0));
-  online=ts>0&&Date.now()-ts<35000;
+  online=ts>0&&Date.now()-ts<50000;
   S={fw:A.firmware||'',locker:{name:A.lockerName||'ตู้ '+(A.lockerId||''),loc:A.lockerLoc||'',note:A.lockerNote||''},
     door:b('doorOpen')?'open':'closed',unlocking:b('lockActive'),alarm:b('alarm'),returning:b('returning'),
     available:n('available'),cams:n('camCount'),unlocks:n('unlockCount'),rssi:n('rssi'),uptime:n('uptime'),heap:n('heap'),
@@ -1332,13 +1332,13 @@ document.addEventListener('submit',async e=>{
 let tick=0;
 async function loop(){
   tick++;
-  if(online&&S.lastSeen&&Date.now()-S.lastSeen>35000){online=false;watchOnline();softRender();}
+  if(online&&S.lastSeen&&Date.now()-S.lastSeen>50000){online=false;watchOnline();softRender();}
   else if(!online&&statusKnown&&tick%5===0)renderBanner();
   const c=cur().name, fast=c==='open';
   if(live?(tick%15===0):(fast||tick%3===0))await loadStatus();
   else if(cur().name==='a_home'){const t=$('#lastSeen');if(t)t.textContent=S.lastSeen?dur((Date.now()-S.lastSeen)/1000)+'ที่แล้ว':'-';}
-  if(me&&(tick%10===0||(fast&&tick%2===0)||(c==='pay'&&tick%4===0)))await loadMe();
-  if(isAdmin()&&(c==='a_home'||c==='a_rent')&&tick%(live?20:6)===0)await loadAdmin();
+  if(me&&(tick%20===0||(fast&&tick%2===0)||(c==='pay'&&tick%4===0)))await loadMe();
+  if(isAdmin()&&(c==='a_home'||c==='a_rent')&&tick%(live?30:10)===0)await loadAdmin();
   if(me){
     if(c==='active'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||c==='verify'||(c==='a_home'&&tick%5===0)||(c==='a_set'&&tick%5===0))softRender();
     else renderTabs();
@@ -1347,10 +1347,16 @@ async function loop(){
 }
 // นาฬิกานับถอยหลังเดินทุกวินาทีโดยไม่ต้องรอ
 async function boot(){
-  ui.booting=!!token;render(true);
+  // เปิดเว็บได้ทันทีด้วยข้อมูลล่าสุดที่จำไว้ แล้วค่อยอัปเดตจากตู้ (ไม่ต้องรอตู้ตอบ)
+  const c=token&&readCache('cl_me');
+  if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];usingCache=true;
+    const a=readCache('cl_ad');if(a&&a.rentals&&me.admin)AD=a;route={tab:isAdmin()?'a_home':'home',stack:[]};}
+  ui.booting=!!token&&!me;render(true);
   await loadStatus();
-  if(token){const j=await loadMe();if(me){await loadAdmin();route={tab:isAdmin()?'a_home':'home',stack:[]};}else if(j&&j.code===401)logoutLocal();}
-  ui.booting=false;render(true);loop();
+  if(token){const had=!!me;const j=await loadMe();
+    if(me){await loadAdmin();if(!had)route={tab:isAdmin()?'a_home':'home',stack:[]};}
+    else if(j&&j.code===401)logoutLocal();}
+  ui.booting=false;render(!usingCache);loop();
 }
 
 boot();
