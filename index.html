@@ -352,6 +352,23 @@ label.btn input{display:none}
 .ppacc{background:var(--surf2);border-radius:14px;padding:4px 12px;margin:10px 0 0;text-align:left;font-size:13px}
 .ppacc>div{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)}.ppacc>div:last-child{border:0}
 .ppacc span{color:var(--ink3);width:70px;flex:none}.ppacc b{flex:1;min-width:0;font-weight:600}.ppacc .btn.sm{padding:5px 10px;font-size:12px}
+.cam .ph{width:56px;height:56px}
+.camimg{width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none;background:var(--surf2);display:block}
+.cam .ph.big,.camimg.big{width:100%;height:220px;border-radius:18px;margin-bottom:12px}
+.ph.big{display:grid;place-items:center;background:var(--brandSoft);color:var(--brand)}.ph.big svg{width:56px;height:56px}
+.avimg{width:56px;height:56px;border-radius:18px;object-fit:cover;flex:none;display:block}
+.avsm{width:42px;height:42px;border-radius:13px}
+.wallet{background:linear-gradient(140deg,#1F2A44,#0C5A5F);color:#fff;border-radius:var(--r);padding:18px;margin-bottom:12px;box-shadow:0 12px 30px rgba(12,40,60,.25)}
+.wallet .k{font-size:12px;opacity:.75}.wallet .v{font:700 34px var(--fd);margin:2px 0 10px}
+.wallet .btn{background:rgba(255,255,255,.16);box-shadow:none}
+.amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.amts button{border:1.5px solid var(--line);background:var(--surf);border-radius:12px;padding:10px 0;font:600 15px var(--fd)}
+.amts button.on{border-color:var(--brand);background:var(--brandSoft);color:var(--brand)}
+.tx{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px}.tx:last-child{border:0}
+.tx b{margin-left:auto;font-family:var(--fn)}.tx .in{color:var(--ok)}.tx .out{color:var(--warn)}
+.mapwrap{border-radius:16px;overflow:hidden;background:#E7F0E9;max-width:560px;margin:0 auto}
+.mapwrap svg{display:block;width:100%;height:auto}
+.duebar{display:flex;gap:10px;align-items:center;background:var(--accentSoft);color:#7A4A08;border-radius:14px;padding:10px 13px;margin:0 0 12px;font-size:13.5px}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
@@ -368,7 +385,7 @@ label.btn input{display:none}
 <!-- ช่องเลือกรูปอยู่นอกส่วนที่วาดใหม่ทุกวินาที ไม่งั้นเลือกรูปแล้วเหตุการณ์หาย -->
 <input type="file" id="filePick" accept="image/*" hidden>
 
-<script src="config.js?v=13"></script>
+<script src="config.js?v=14"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -589,7 +606,7 @@ function applyRaw(){
     activeCount:n('activeCount'),overdueCount:n('overdueCount'),readyCount:n('readyCount'),pendingPay:n('pendingPay'),
     pendingVerify:n('pendingVerify'),refundPending:n('refundPending'),members:n('members'),hasCounts:RT.activeCount!=null,
     ssid:A.ssid||'',ip:A.ip||'',promptpay:String(A.promptpay||SHOP_PP.id),ppName:String(A.ppName||(A.promptpay?'':SHOP_PP.name)),approve:A.approve!==false,unlockMs:A.unlockMs||3000,
-    easyslip:A.easyslip===true||A.easyslip==='true',reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts,uptimeTs:RT.uptime?RT.uptime.ts:0};
+    easyslip:A.easyslip===true||A.easyslip==='true',lateFeeMin:A.lateFeeMin!=null?Number(A.lateFeeMin):100,lateGraceMin:Number(A.lateGraceMin||0),lostHours:A.lostHours!=null?Number(A.lostHours):24,reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts,uptimeTs:RT.uptime?RT.uptime.ts:0};
 }
 // เหตุการณ์สดจากตู้ (ทุกบรรทัดของบันทึก) → ฟีดแดชบอร์ด + ดึงข้อมูลใหม่ทันที
 function onEvent(e){
@@ -631,9 +648,11 @@ function renderBanner(){
   b.innerHTML=`<div class="offbar"><span class="pulse-dot"></span><div><b>${tbReachable?'ตู้ออฟไลน์':'เชื่อม ThingsBoard ไม่ได้'}</b> · ${tbReachable?last:'ตรวจอินเทอร์เน็ตของมือถือ'}
     <div class="xs">${usingCache?'แสดงข้อมูลล่าสุดที่จำไว้ ':''}ดูข้อมูลได้ แต่เข้าสู่ระบบ เช่า เปิดตู้ และคืนกล้องต้องรอตู้กลับมาออนไลน์ · ระบบเชื่อมใหม่ให้เอง</div></div></div>`;
 }
+let WAL={bal:0,top:{st:0,msg:''},tx:[]};
 async function loadMe(){if(!token)return;const j=await rpc('me');
-  if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;usingCache=false;saveCache('cl_me',{user:me,rentals:myRentals,cams});}
-  else if(!me&&j.code!==401){const c=readCache('cl_me');if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];usingCache=true;}}
+  if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;usingCache=false;
+    WAL={bal:j.wallet||0,top:j.topup||{st:0,msg:''},tx:j.wtx||[]};saveCache('cl_me',{user:me,rentals:myRentals,cams,wal:WAL});}
+  else if(!me&&j.code!==401){const c=readCache('cl_me');if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];if(c.wal)WAL=c.wal;usingCache=true;}}
   return j;}
 async function loadAdmin(){if(!isAdmin())return;const j=await rpc('adminOverview');
   if(j.ok){AD=j;saveCache('cl_ad',j);}
@@ -735,9 +754,13 @@ function viewAuth(){
 const VF={ok:['ยืนยันแล้ว','ok'],pending:['รอตรวจ','amber'],rejected:['ไม่ผ่าน','warn'],none:['ยังไม่ยืนยัน','warn'],undefined:['ยืนยันแล้ว','ok']};
 const ST={await:['รอชำระเงิน','amber'],verify:['รอตรวจสอบการชำระ','amber'],ready:['พร้อมรับกล้อง','teal'],active:['กำลังเช่า','teal'],returned:['คืนแล้ว','ok'],cancelled:['ยกเลิก','grey']};
 const isLate=r=>r.status==='active'&&r.due&&nowS()>r.due;
+// ค่าปรับคืนช้า (นาทีละ S.lateFeeMin บาท) คำนวณสดในเครื่อง ให้ตรงกับบอร์ด
+const lateNow=r=>{if(r.status!=='active'||!r.due)return 0;const over=nowS()-r.due;if(over<=(S.lateGraceMin||0)*60)return 0;return Math.ceil(over/60)*(S.lateFeeMin??100);};
 const owed=r=>Math.max(0,r.amount-r.paid);
-const refundable=r=>Math.max(0,r.paid-(r.amount-r.deposit)); // มัดจำที่ต้องคืน (หักยอดค้าง/ค่าปรับแล้ว)
-function statusTag(r){if(isLate(r))return '<span class="tag warn">เกินกำหนด</span>';if(r.status==='returned'&&r.lateFee)return '<span class="tag warn">คืนช้า</span>';const s=ST[r.status]||['-','grey'];return `<span class="tag ${s[1]}">${s[0]}</span>`;}
+// ยอดที่ต้องจ่ายจริง: หลังคืนกล้อง ค่าปรับหักจากมัดจำก่อน ส่วนที่เกินมัดจำจึงเป็นหนี้
+const debt=r=>r.status==='returned'?Math.max(0,owed(r)-r.deposit):owed(r);
+const refundable=r=>r.refundable!=null?r.refundable:(r.forfeit||r.lost||r.refunded)?0:Math.max(0,Math.min(r.deposit,r.paid-(r.amount-r.deposit))); // มัดจำที่คืนได้
+function statusTag(r){if(r.forfeit)return '<span class="tag warn">ชำรุด · ยึดมัดจำ</span>';if(r.lost)return '<span class="tag warn">ไม่คืนกล้อง</span>';if(isLate(r))return '<span class="tag warn">เกินกำหนด</span>';if(r.status==='returned'&&r.lateFee)return '<span class="tag warn">คืนช้า</span>';const s=ST[r.status]||['-','grey'];return `<span class="tag ${s[1]}">${s[0]}</span>`;}
 function greet(){const h=Number(new Date().toLocaleString('en-US',{hour:'numeric',hour12:false,timeZone:'Asia/Bangkok'}));return h<12?'สวัสดีตอนเช้า':h<17?'สวัสดีตอนบ่าย':'สวัสดีตอนเย็น';}
 function firstName(){return (me.name||me.sid).split(' ')[0];}
 function doorLine(){
@@ -756,21 +779,81 @@ function lockerHero(){
 
 const VIEWS={},AFTER={};
 
+/* ---------- รูปกล้อง / รูปโปรไฟล์: โหลดจากตู้ครั้งเดียว แล้วจำไว้ในเครื่องตามรุ่นรูป ---------- */
+const PH={},phLoading={};
+function getPhoto(kind,id,ver){
+  if(!ver)return null;const k='ph_'+kind+id+'_'+ver;
+  if(PH[k])return PH[k];
+  try{const v=localStorage.getItem(k);if(v){PH[k]=v;return v;}}catch(e){}
+  if(!phLoading[k]&&online!==false){phLoading[k]=1;(async()=>{
+    const j=await rpc(kind==='c'?'camPhoto':'avatar',kind==='c'?{id}:{idx:id});
+    if(j.ok&&j.img){PH[k]=j.img;try{Object.keys(localStorage).filter(x=>x.startsWith('ph_'+kind+id+'_')&&x!==k).forEach(x=>localStorage.removeItem(x));localStorage.setItem(k,j.img);}catch(e){}softRender();}
+    else setTimeout(()=>{delete phLoading[k];},30000);})();}
+  return null;}
+function camThumb(c,big){const src=getPhoto('c',c.id,c.ph);
+  return src?`<img class="camimg${big?' big':''}" src="${src}" alt="${esc(c.name)}">`:`<span class="ph${big?' big':''}">${ic('cam')}</span>`;}
+function avatarHtml(u,cls=''){const src=u&&getPhoto('a',u.idx,u.av);
+  if(src)return `<img class="avimg ${cls}" src="${src}" alt="">`;
+  const ini=((u&&(u.name||u.sid))||'?').split(' ').map(s=>s[0]).join('').slice(0,2);
+  return `<div class="av ${cls}" ${u&&u.admin?'style="background:var(--accent)"':''}>${esc(ini)}</div>`;}
+
+/* ---------- แผนที่จำลอง ตำแหน่งตู้ในมหาวิทยาลัย ---------- */
+function campusMap(){
+  const L=S.locker||{name:'ตู้',loc:''};const m=String(L.loc||'').match(/อาคาร\s*(\d+)/);const hb=m?Number(m[1]):11;
+  const B=[[1,40,70,70,46],[2,120,70,70,46],[3,200,70,60,46],[4,270,70,70,46],[5,40,140,90,40],[6,140,140,60,40],[7,210,140,60,40],[8,280,140,60,40],[9,40,200,70,44],[10,120,200,90,44],[11,220,200,120,44]];
+  const box=([n,x,y,w,h])=>{const on=n===hb;return `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${on?'#0C5A5F':'#FFFFFF'}" stroke="${on?'#0C5A5F':'#B9C9C0'}" stroke-width="${on?2:1}"/><text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-size="11" font-weight="${on?700:500}" fill="${on?'#fff':'#4E6069'}">อาคาร ${n}</text></g>`;};
+  const t=B.find(b=>b[0]===hb)||B[10];const px=t[1]+t[3]/2,py=t[2]-4;
+  return `<div class="mapwrap"><svg viewBox="0 0 380 290" role="img" aria-label="แผนที่จำลองตำแหน่งตู้">
+    <rect x="0" y="0" width="380" height="290" fill="#E7F0E9"/>
+    <rect x="0" y="262" width="380" height="28" fill="#CBD3D6"/><text x="190" y="281" text-anchor="middle" font-size="11" fill="#4E6069">ถนนพหลโยธิน · ประตูหน้ามหาวิทยาลัย</text>
+    <rect x="22" y="48" width="336" height="206" rx="14" fill="#F3F7F2" stroke="#C7D8CB"/>
+    <path d="M190 254 V120 M30 125 H350" stroke="#DCE5DD" stroke-width="10"/>
+    <text x="26" y="36" font-size="13" font-weight="700" fill="#0E1A20">มหาวิทยาลัยศรีปทุม (บางเขน)</text>
+    ${B.map(box).join('')}
+    <g transform="translate(${px},${py})"><path d="M0 0 C-12 -16 -14 -22 -14 -28 A14 14 0 1 1 14 -28 C14 -22 12 -16 0 0Z" fill="#E08A1E" stroke="#fff" stroke-width="2"/><circle cx="0" cy="-28" r="5" fill="#fff"/></g>
+    <g transform="translate(${Math.min(Math.max(px,70),310)},${py-50})"><rect x="-62" y="-16" width="124" height="22" rx="11" fill="#0E1A20"/><text x="0" y="-1" text-anchor="middle" font-size="11" fill="#fff">${esc(L.name)} อยู่ที่นี่</text></g>
+  </svg></div>
+  <div class="row" style="margin-top:8px"><div class="grow xs muted">แผนที่จำลอง ไม่ใช่มาตราส่วนจริง · ${esc(L.loc||'')}${L.note?' · '+esc(L.note):''}</div>
+  <a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('มหาวิทยาลัยศรีปทุม บางเขน')}">${ic('pin')} Google Maps</a></div>`;}
+
+/* ---------- แจ้งเตือนใกล้ถึงเวลาคืน (ทำงานขณะเปิดเว็บไว้ รวมถึงแท็บที่อยู่เบื้องหลัง) ---------- */
+let swReg=null;
+const notifyOn=()=>('Notification' in window)&&Notification.permission==='granted';
+async function regSW(){try{if('serviceWorker' in navigator&&!swReg)swReg=await navigator.serviceWorker.register('sw.js');}catch(e){}}
+function notify(title,body,tag){toast(title+' · '+body);if(navigator.vibrate)try{navigator.vibrate([200,100,200]);}catch(e){}
+  if(!notifyOn())return;const o={body,tag,renotify:true,icon:'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Crect width=%2224%22 height=%2224%22 rx=%226%22 fill=%22%230C5A5F%22/%3E%3C/svg%3E'};
+  try{if(swReg&&swReg.showNotification)swReg.showNotification(title,o);else new Notification(title,o);}catch(e){}}
+function checkDue(){
+  const r=openRental();if(!r||r.status!=='active'||!r.due)return;
+  const left=r.due-nowS(),k=s=>'cl_n_'+r.id+'_'+s,done=s=>{try{return localStorage.getItem(k(s));}catch(e){return 1;}},mark=s=>{try{localStorage.setItem(k(s),'1');}catch(e){}};
+  if(left<=0){if(!done(0)){[1800,600,0].forEach(mark);notify('เกินเวลาคืนกล้องแล้ว',`${r.camName} · ปรับนาทีละ ${baht(S.lateFeeMin??100)} บาท กรุณาคืนที่ตู้โดยเร็ว`,'due'+r.id);}return;}
+  if(left<=600){if(!done(600)){[1800,600].forEach(mark);notify('อีก 10 นาทีต้องคืนกล้อง',`${r.camName} · คืนก่อน ${tHM(r.due)} น.`,'due'+r.id);}return;}
+  if(left<=1800&&!done(1800)){mark(1800);notify('อีก 30 นาทีต้องคืนกล้อง',`${r.camName} · คืนก่อน ${tHM(r.due)} น.`,'due'+r.id);}
+}
+function dueBar(){const r=openRental();if(!r||r.status!=='active')return '';const left=r.due-nowS();
+  if(left>1800)return '';
+  return `<div class="duebar">${ic('clock')}<div style="flex:1"><b>${left<=0?'เกินเวลาคืนแล้ว '+dur(-left):'ใกล้ถึงเวลาคืน · เหลือ '+dur(left)}</b><div class="xs">${left<=0?`ค่าปรับตอนนี้ ${baht(lateNow(r))} ฿ (นาทีละ ${baht(S.lateFeeMin??100)} ฿)`:`คืนก่อน ${tHM(r.due)} น. ไม่งั้นปรับนาทีละ ${baht(S.lateFeeMin??100)} ฿`}</div></div><button class="btn sm" data-go="active">ดู</button></div>`;}
+const policyText=()=>`คืนเกินกำหนดปรับนาทีละ ${baht(S.lateFeeMin??100)} บาท${S.lateGraceMin?` (ผ่อนผัน ${S.lateGraceMin} นาที)`:''} หักจากมัดจำ · ไม่คืนกล้องเกิน ${S.lostHours??24} ชม. หรือผู้ดูแลตรวจแล้วพบว่ากล้องชำรุด/เสียหาย ไม่คืนมัดจำทั้งสิ้น`;
+
+
 VIEWS.home=()=>{
   const r=openRental(), d=doorLine();
   const done=myRentals.filter(x=>x.status==='returned'||x.status==='active').length;
   let cta=`<button class="cta" data-go="rent"><span class="ic">${ic('cam')}</span><span style="flex:1"><b>เช่ากล้อง</b><span>เลือกกล้องแล้วรับที่ตู้ได้ทันที</span></span>${ic('chev')}</button>`;
   if(r){const s=ST[r.status];cta=`<button class="cta amber" data-go="active"><span class="ic">${ic(r.status==='active'?'bolt':r.status==='ready'?'unlock':'wallet')}</span><span style="flex:1"><b>${r.status==='active'?(isLate(r)?'เกินกำหนดคืนแล้ว!':'เหลืออีก '+dur(r.due-nowS())):s[0]}</b><span>${esc(r.camName)} · แตะเพื่อดูรายละเอียด</span></span>${ic('chev')}</button>`;}
   if(!r&&me.verify!=='ok'&&!me.admin)cta=`<button class="cta amber" data-go="verify"><span class="ic">${ic('shield')}</span><span style="flex:1"><b>${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนก่อนเช่า'}</b><span>${me.verify==='pending'?'ผู้ดูแลกำลังตรวจรูปของคุณ':me.verify==='rejected'?'ไม่ผ่าน กรุณาส่งรูปใหม่':'ถ่ายรูปบัตรและรูปหน้า ทำครั้งเดียว'}</span></span>${ic('chev')}</button>`;
-  return `<div class="top"><div class="grow"><div class="hello">${greet()}</div><h1>${esc(firstName())}</h1></div><button class="iconbtn" data-act="refresh" title="รีเฟรช">${ic('refresh')}</button></div>
-    ${lockerHero()}${cta}
+  return `<div class="top">${avatarHtml(me,'avsm')}<div class="grow"><div class="hello">${greet()}</div><h1>${esc(firstName())}</h1></div><button class="iconbtn" data-act="refresh" title="รีเฟรช">${ic('refresh')}</button></div>
+    ${dueBar()}${lockerHero()}${cta}
     <div class="grid2">
       <div class="tile" data-go="verify" style="cursor:pointer"><div class="ic ${VF[me.verify][1]}">${ic('shield')}</div><div class="k">สถานะบัญชี</div><div class="v">${me.disabled?'ถูกระงับ':VF[me.verify][0]}</div></div>
-      <div class="tile"><div class="ic amber">${ic('clock')}</div><div class="k">เช่าทั้งหมด</div><div class="v">${done} ครั้ง</div></div>
+      <div class="tile" data-go="wallet" style="cursor:pointer"><div class="ic amber">${ic('wallet')}</div><div class="k">เงินในกระเป๋า</div><div class="v">${baht(WAL.bal)} ฿</div></div>
     </div>
     <div class="card"><div class="door"><div class="ic ${d.c}">${ic(d.i)}</div><div style="flex:1"><div class="muted xs">สถานะตู้ตอนนี้</div><h3>${d.t}</h3><div class="muted sm">${d.s}</div></div><span class="tag ${online?'ok':'warn'}">${online?'ออนไลน์':'ออฟไลน์'}</span></div></div>
+    <div class="sec"><h2>ตำแหน่งตู้</h2></div>
+    <div class="card">${campusMap()}</div>
     <div class="sec"><h2>วิธีเช่า</h2></div>
-    <div class="card steps"><div>เลือกกล้องและจำนวนชั่วโมง</div><div>สแกนพร้อมเพย์จ่ายค่าเช่า + มัดจำ แล้วกด “ฉันชำระแล้ว”</div><div>ไปที่ตู้ กด “เปิดตู้รับกล้อง” หยิบกล้อง ปิดประตู แล้วกด “ล็อกตู้”</div><div>คืนที่ตู้เดิม กด “ไปคืนกล้อง” ใส่กล้อง ปิดประตู เสร็จ</div></div>
+    <div class="card steps"><div>เติมเงินเข้ากระเป๋า (สแกน QR แล้วแนบสลิป) หรือจ่ายด้วย QR ทีละครั้ง</div><div>เลือกกล้องและจำนวนชั่วโมง แล้วจ่ายค่าเช่า + มัดจำ</div><div>ไปที่ตู้ กด “เปิดตู้รับกล้อง” หยิบกล้อง ปิดประตู แล้วกด “ล็อกตู้”</div><div>คืนที่ตู้เดิม กด “ไปคืนกล้อง” ใส่กล้อง ปิดประตู เสร็จ · ผู้ดูแลตรวจสภาพแล้วคืนมัดจำเข้ากระเป๋า</div></div>
+    <p class="xs muted" style="margin:8px 2px 0">${esc(policyText())}</p>
     <p class="foot">CamLock v${esc(S.fw||'')} · ${online?'ตู้ออนไลน์':'ตู้ออฟไลน์'}</p>`;
 };
 
@@ -779,7 +862,7 @@ VIEWS.rent=()=>{
   const list=cams.map(c=>{
     const ok=c.status==='available'&&!r;
     const tag=c.status==='rented'?'<span class="tag amber">ถูกเช่าอยู่</span>':c.status==='maint'?'<span class="tag grey">ซ่อมบำรุง</span>':'';
-    return `<button class="cam ${ok?'':'dis'}" ${ok?`data-act="pickCam" data-id="${c.id}"`:''}><span class="ph">${ic('cam')}</span>
+    return `<button class="cam ${ok?'':'dis'}" ${ok?`data-act="pickCam" data-id="${c.id}"`:''}>${camThumb(c)}
       <span style="flex:1;min-width:0"><span class="nm">${esc(c.name)}</span> ${tag}<span class="ln" style="display:block">+ ${esc(c.lens||'-')}</span>
       ${c.specs?`<span class="specs">${c.specs.split('|').map(s=>`<span>${esc(s)}</span>`).join('')}</span>`:''}</span>
       <span class="price"><b>${baht(c.price)}฿</b><span class="xs muted">/ชม.</span><small>มัดจำ ${baht(c.deposit)}</small></span></button>`;}).join('');
@@ -793,7 +876,8 @@ VIEWS.camDetail=p=>{
   const H=[2,4,6,8,12,24,48,72];if(!H.includes(ui.hours))ui.hours=6;
   const rent=c.price*ui.hours, due=nowS()+ui.hours*3600;
   return `<div class="back"><button data-act="back">${ic('left')}</button><h2>รายละเอียดการเช่า</h2></div>
-    <div class="cam sel" style="margin-top:12px"><span class="ph">${ic('cam')}</span><span style="flex:1"><span class="nm">${esc(c.name)}</span><span class="ln" style="display:block">+ ${esc(c.lens)}</span></span><span class="price"><b>${baht(c.price)}฿</b><span class="xs muted">/ชม.</span></span></div>
+    <div style="margin-top:12px">${camThumb(c,true)}</div>
+    <div class="cam sel"><span style="flex:1"><span class="nm">${esc(c.name)}</span><span class="ln" style="display:block">+ ${esc(c.lens)}</span></span><span class="price"><b>${baht(c.price)}฿</b><span class="xs muted">/ชม.</span></span></div>
     <div class="card"><h3 style="margin-bottom:10px">เช่ากี่ชั่วโมง</h3>
       <div class="hrs">${H.map(h=>`<button class="${h===ui.hours?'on':''}" data-act="setHours" data-h="${h}">${h}</button>`).join('')}</div>
       <p class="sm muted" style="margin:10px 0 0">ถ้ารับตอนนี้ → ต้องคืนก่อน <b style="color:var(--ink)">${ui.hours>=24?tDM(due)+' ':''}${tHM(due)} น.</b> <span class="xs">(เริ่มนับเวลาตอนเปิดตู้รับกล้อง)</span></p></div>
@@ -804,13 +888,22 @@ VIEWS.camDetail=p=>{
       <div class="kv"><span>ค่ามัดจำ (ได้คืนหลังคืนกล้อง)</span><b>${baht(c.deposit)} ฿</b></div>
       <div class="total"><span>ชำระตอนนี้</span><b>${me.test?'0':baht(rent+c.deposit)} ฿</b></div>
       ${me.test?`<div class="alert amber" style="margin:10px 0 0">${ic('info')}<div><b>บัญชีทดสอบ</b> ไม่ต้องชำระเงิน จองแล้วไปเปิดตู้ได้เลย (กลอนเปิดจริง)</div></div>`:''}
-      <p class="xs muted" style="margin:10px 0 0">ค่ามัดจำจะคืนให้เมื่อคืนกล้องและผู้ดูแลตรวจสภาพผ่าน คืนช้าเกิน 10 นาทีคิดค่าปรับชั่วโมงละ ${baht(c.price)} ฿ หักจากมัดจำ</p></div>
+      <p class="xs muted" style="margin:10px 0 0">ค่ามัดจำจะคืนเข้ากระเป๋าเมื่อคืนกล้องและผู้ดูแลตรวจสภาพผ่าน · ${esc(policyText())}</p>
+      ${!me.test?`<div class="kv" style="margin-top:6px"><span>เงินในกระเป๋า</span><b>${baht(WAL.bal)} ฿ ${WAL.bal>=rent+c.deposit?'<span class="tag ok">พอจ่าย</span>':'<span class="tag amber">ไม่พอ</span>'}</b></div>`:''}</div>
     ${me.verify==='ok'||me.admin||me.test?`<button class="btn" data-act="doRent" data-id="${c.id}">${me.test?'จองแบบทดสอบ (ข้ามการชำระเงิน)':'จองและไปชำระเงิน'}</button>`:`<button class="btn amber" data-go="verify">${ic('shield')} ${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนเพื่อจอง'}</button>`}`;
 };
 
 function fmtPP(id){id=String(id||'');return id.length===10?id.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1-$2-$3'):id.length===13?id.replace(/^(\d)(\d{4})(\d{5})(\d{2})(\d)$/,'$1-$2-$3-$4-$5'):id;}
+function walletPayBlock(r){
+  const due=debt(r);if(due<=0||me.test)return '';
+  const ok=WAL.bal>=due;
+  return `<div class="card"><div class="row"><div class="ic amber" style="width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:none">${ic('wallet')}</div>
+    <div class="grow"><b>จ่ายด้วยเงินในกระเป๋า</b><div class="xs muted">คงเหลือ ${baht(WAL.bal)} ฿ · ต้องจ่าย ${baht(due)} ฿</div></div></div>
+    ${ok?`<button class="btn" style="margin-top:10px" data-act="payWallet" data-rid="${r.id}">จ่าย ${baht(due)} ฿ จากกระเป๋า</button>`
+       :`<button class="btn ghost" style="margin-top:10px" data-go="wallet">เงินไม่พอ · เติมเงินเข้ากระเป๋า</button>`}</div>
+    <div class="center xs muted" style="margin:-2px 0 10px">หรือสแกน QR จ่ายเฉพาะครั้งนี้</div>`;}
 function payBlock(r){
-  const due=owed(r);
+  const due=debt(r);
   if(!S.promptpay)return `<div class="alert amber">${ic('info')}<div>ตู้นี้ยังไม่ได้ตั้งเลขพร้อมเพย์ กรุณาชำระ <b>${baht(due)} ฿</b> กับผู้ดูแลโดยตรง แล้วกด “ฉันชำระแล้ว”</div></div>`;
   let q='';try{q=QR.svg(promptpayPayload(S.promptpay,due));}catch(e){q='';}
   return `<div class="card center"><div class="pp">${ic('qr')} PromptPay</div><div class="xs muted">สแกนจ่ายจากแอปธนาคาร ยอดถูกใส่ไว้ให้แล้ว</div>
@@ -831,14 +924,14 @@ function slipBlock(r){
 }
 VIEWS.pay=p=>{
   const r=myRentals.find(x=>x.id==p.rid);if(!r)return VIEWS.active();
-  const due=owed(r);
+  const due=debt(r);
   const waiting=r.status==='verify'||(r.notified&&due>0);
   let body;
   if(due<=0)body=`<div class="alert ok">${ic('check')}<div><b>ชำระครบแล้ว</b> ${r.status==='ready'?'ไปที่ตู้แล้วกดเปิดตู้ได้เลย':''}</div></div>
     <button class="btn" data-act="${r.status==='ready'?'openFlow':'goActive'}" data-rid="${r.id}">${r.status==='ready'?'ไปเปิดตู้รับกล้อง':'กลับไปหน้ากำลังเช่า'}</button>`;
   else if(waiting)body=`<div class="card"><div class="row"><div class="spin"></div><div class="grow"><h3>รอผู้ดูแลตรวจสอบยอด</h3><div class="sm muted">ส่วนใหญ่ไม่เกิน 5 นาที หน้านี้จะอัปเดตเอง</div></div></div></div>
-    ${payBlock(r)}${slipBlock(r)}<button class="btn ghost" data-act="cancelRental" data-rid="${r.id}">ยกเลิกการจอง</button>`;
-  else body=`${payBlock(r)}
+    ${walletPayBlock(r)}${payBlock(r)}${slipBlock(r)}<button class="btn ghost" data-act="cancelRental" data-rid="${r.id}">ยกเลิกการจอง</button>`;
+  else body=`${walletPayBlock(r)}${payBlock(r)}
     <div class="card"><div class="kv"><span>ค่าเช่า ${r.hours} ชม.</span><b>${baht(r.price*r.hours)} ฿</b></div>
     <div class="kv"><span>ค่ามัดจำ</span><b>${baht(r.deposit)} ฿</b></div>
     ${r.lateFee?`<div class="kv"><span>ค่าปรับคืนช้า</span><b>${baht(r.lateFee)} ฿</b></div>`:''}
@@ -957,9 +1050,13 @@ VIEWS.active=()=>{
     return `<div class="top"><div class="grow"><div class="hello">กำลังเช่าอยู่</div><h1>ยังไม่มีรายการ</h1></div></div>
     <div class="card empty"><div class="ic teal">${ic('cam')}</div><h3 style="color:var(--ink)">ยังไม่ได้เช่ากล้อง</h3><p class="sm">เลือกกล้องแล้วรับที่ตู้ได้ทันที</p><button class="btn" data-go="rent" style="margin-top:8px">เลือกกล้อง</button></div>
     ${last?`<div class="card"><div class="row"><div class="grow"><div class="xs muted">ครั้งล่าสุด</div><h3>${esc(last.camName)}</h3><div class="sm muted">คืนเมื่อ ${tFull(last.returned)}</div></div>${statusTag(last)}</div>
-      ${!last.refunded&&last.deposit?`<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div>มัดจำ ${baht(refundable(last))} ฿ รอผู้ดูแลตรวจสภาพและคืนเงิน</div></div>`:''}</div>`:''}`;}
+      ${last.forfeit?`<div class="alert warn" style="margin:10px 0 0">${ic('alert')}<div>ผู้ดูแลตรวจแล้วพบว่ากล้องชำรุด/เสียหาย <b>ไม่คืนมัดจำ</b></div></div>`
+        :last.lost?`<div class="alert warn" style="margin:10px 0 0">${ic('alert')}<div>คืนกล้องเกินเวลาที่กำหนด <b>ไม่คืนมัดจำ</b></div></div>`
+        :last.refunded&&last.deposit?`<div class="alert ok" style="margin:10px 0 0">${ic('check')}<div>ตรวจสภาพผ่าน คืนมัดจำเข้ากระเป๋าแล้ว</div></div>`
+        :last.deposit?`<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div>มัดจำที่จะได้คืน ${baht(refundable(last))} ฿ รอผู้ดูแลตรวจสภาพ แล้วคืนเข้ากระเป๋า</div></div>`:''}</div>`:''}`;}
   const d=doorLine();
-  const details=`<div class="card"><div class="kv"><span>กล้อง</span><b>${esc(r.camName)}</b></div><div class="kv"><span>รับ/คืนที่</span><b>${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</b></div>
+  const cm=cams.find(c=>c.id===r.cam);
+  const details=`<div class="card">${cm&&cm.ph?camThumb(cm,true):''}<div class="kv"><span>กล้อง</span><b>${esc(r.camName)}</b></div><div class="kv"><span>รับ/คืนที่</span><b>${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</b></div>
       <div class="kv"><span>ระยะเวลา</span><b>${r.hours} ชม.</b></div><div class="kv"><span>มัดจำ</span><b class="mono">${baht(r.deposit)} ฿</b></div>
       ${owed(r)?`<div class="kv"><span>ยอดค้างชำระ</span><b class="mono" style="color:var(--warn)">${baht(owed(r))} ฿</b></div>`:''}</div>`;
   if(r.status==='await'||r.status==='verify')return `<div class="top"><div class="grow"><div class="hello">รายการ #${r.id}</div><h1>${ST[r.status][0]}</h1></div></div>
@@ -968,6 +1065,7 @@ VIEWS.active=()=>{
   if(r.status==='ready')return `<div class="top"><div class="grow"><div class="hello">ชำระแล้ว · รายการ #${r.id}</div><h1>พร้อมรับกล้อง</h1></div></div>
     <div class="card center" style="padding:24px 16px"><div class="ic teal" style="width:70px;height:70px;border-radius:22px;display:grid;place-items:center;margin:0 auto 12px">${ic('unlock')}</div>
       <h3>เดินไปที่ ${esc(S.locker?S.locker.name:'ตู้')}</h3><p class="sm muted" style="margin:4px 0 0">${esc(S.locker?S.locker.loc+' · '+S.locker.note:'')}<br>เวลาเช่า ${r.hours} ชม. จะเริ่มนับตอนกดเปิดตู้</p></div>
+    <div class="card">${campusMap()}</div>
     <button class="btn amber" data-act="openFlow" data-rid="${r.id}">${ic('unlock')} เปิดตู้รับกล้อง</button>
     <button class="btn ghost" data-act="cancelRental" data-rid="${r.id}">ยกเลิกการจอง</button>${details}`;
   // active
@@ -977,7 +1075,8 @@ VIEWS.active=()=>{
     <div class="card center"><div class="ring"><svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="80" stroke="#E9EFF0" stroke-width="14" fill="none"/>
       <circle cx="90" cy="90" r="80" stroke="${late?'var(--warn)':'var(--brand)'}" stroke-width="14" fill="none" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-frac)}"/></svg>
       <div class="t"><div class="clock" id="clk" style="${late?'color:var(--warn)':''}">${late?'-'+clock(-left):clock(left)}</div><div class="xs muted">คืนก่อน ${r.hours>=24?tDM(r.due)+' ':''}${tHM(r.due)} น.</div></div></div>
-      ${late?`<div class="alert warn" style="text-align:left;margin:0">${ic('alert')}<div>เกินเวลาคืนแล้ว คิดค่าปรับชั่วโมงละ ${baht(r.price)} ฿ (หักจากมัดจำ) กรุณาคืนโดยเร็ว</div></div>`:''}</div>
+      ${late?`<div class="alert warn" style="text-align:left;margin:0">${ic('alert')}<div><b>เกินเวลาคืนแล้ว · ค่าปรับตอนนี้ ${baht(lateNow(r))} ฿</b><br>ปรับนาทีละ ${baht(S.lateFeeMin??100)} ฿ หักจากมัดจำ ${baht(r.deposit)} ฿${r.lost?' · <b>เกินเวลาที่กำหนด ไม่คืนมัดจำแล้ว</b>':` · ถ้าไม่คืนเกิน ${S.lostHours??24} ชม. จะไม่คืนมัดจำ`}</div></div>`:''}
+      ${!notifyOn()&&('Notification' in window)?`<button class="btn sm ghost" style="margin:10px auto 0" data-act="enableNotify">${ic('info')} เปิดแจ้งเตือนเมื่อใกล้ถึงเวลาคืน</button>`:''}</div>
     ${details}
     <div class="term"><div>${esc(S.locker?S.locker.name:'ตู้')} · ${d.t}</div><div>ประตู: ${S.door==='open'?'<b style="color:var(--accent)">เปิด</b>':'<b>ปิด · ล็อก</b>'} · ${online?'ออนไลน์':'ออฟไลน์'}</div><div>กล้อง: อยู่กับคุณ</div></div>
     ${owed(r)?`<button class="btn amber" data-act="goPay" data-rid="${r.id}">ชำระยอดค้าง ${baht(owed(r))} ฿</button>`:''}
@@ -1061,7 +1160,22 @@ async function waitSlip(rid){
     if(!r||r.slip!==1){if(r&&r.slip===2)toast('ตรวจสลิปผ่าน ชำระเรียบร้อย');else if(r&&r.slip===3)toast(r.slipMsg||'ตรวจสลิปไม่ผ่าน');return;}}
   toast('ตู้ยังตรวจไม่เสร็จ ลองรีเฟรชอีกครั้ง');
 }
+async function waitTopup(){
+  for(let k=0;k<12;k++){await new Promise(r=>setTimeout(r,2000));await loadMe();render(false);
+    if(!WAL.top||WAL.top.st!==1){toast(WAL.top&&WAL.top.st===2?WAL.top.msg:(WAL.top&&WAL.top.msg)||'ตรวจสลิปไม่ผ่าน');if(WAL.top&&WAL.top.st===2)ui.topAmt=0;render(false);return;}}
+  toast('ตู้ยังตรวจไม่เสร็จ ลองรีเฟรชอีกครั้ง');}
 document.addEventListener('change',async e=>{
+  const ds=e.target.dataset||{},file=e.target.files&&e.target.files[0];
+  if(ds.topup&&file){ui.slipBusy=true;render(false);
+    try{toast('กำลังอ่าน QR บนสลิป…');const pl=await readSlipQR(file);
+      if(!pl){toast('ไม่เจอ QR บนสลิป ลองแคปหน้าจอสลิปจากแอปธนาคารแล้วแนบใหม่');return;}
+      const j=await rpc('topupSlip',{payload:pl});if(!j.ok){toast(j.msg);return;}
+      WAL.top={st:1,msg:'กำลังตรวจสลิป…'};render(false);await waitTopup();
+    }catch(err){toast(err.message);}finally{ui.slipBusy=false;render(false);}return;}
+  if(ds.cam&&file){try{toast('กำลังย่อและอัปโหลดรูปกล้อง…');const img=await shrinkImage(file,22000);
+      const j=await rpc('adminCamPhoto',{id:ds.cam,img});toast(j.msg);if(j.ok){await loadAdmin();await loadMe();closeSheet();softRender();}}catch(err){toast(err.message);}return;}
+  if(ds.av&&file){try{toast('กำลังอัปโหลดรูปโปรไฟล์…');const img=await shrinkImage(file,15000);
+      const j=await rpc('avatarUpload',{img});if(j.ok){me=j.user;toast('อัปเดตรูปโปรไฟล์แล้ว');render(false);}else toast(j.msg);}catch(err){toast(err.message);}return;}
   if(e.target.dataset&&e.target.dataset.slip&&e.target.files[0]){const rid=e.target.dataset.rid;ui.slipBusy=true;render(false);
     try{toast('กำลังอ่าน QR บนสลิป…');const pl=await readSlipQR(e.target.files[0]);
       if(!pl){toast('ไม่เจอ QR บนสลิป ลองแคปหน้าจอสลิปจากแอปธนาคารแล้วแนบใหม่');return;}
@@ -1080,10 +1194,33 @@ document.addEventListener('change',async e=>{
     (ui.vphoto=ui.vphoto||{})[k]=data;render(false);toast('อัปโหลดแล้ว');}catch(err){toast(err.message);}
 });
 
+VIEWS.wallet=()=>{
+  const amts=[100,300,500,1000];const a=ui.topAmt||0;
+  let q='';if(a>0&&S.promptpay){try{q=QR.svg(promptpayPayload(S.promptpay,a));}catch(e){}}
+  const st=WAL.top||{st:0};
+  const topMsg=st.st===1?`<div class="alert teal"><div class="spin"></div><div><b>กำลังตรวจสลิปกับธนาคาร…</b></div></div>`:st.st===3?`<div class="alert warn">${ic('alert')}<div><b>เติมเงินไม่สำเร็จ</b><div class="xs">${esc(st.msg||'')}</div></div></div>`:st.st===2?`<div class="alert ok">${ic('check')}<div>${esc(st.msg||'เติมเงินสำเร็จ')}</div></div>`:'';
+  return `<div class="back"><button data-act="back">${ic('left')}</button><h2>กระเป๋าเงิน</h2></div>
+    <div class="wallet" style="margin-top:12px"><div class="k">ยอดเงินคงเหลือ</div><div class="v">${baht(WAL.bal)} ฿</div><div class="xs" style="opacity:.75">ใช้จ่ายค่าเช่า มัดจำ ต่อเวลา · มัดจำที่ได้คืนจะเข้ากระเป๋านี้</div></div>
+    <div class="card"><h3 style="margin-bottom:10px">เติมเงิน</h3>
+      <div class="amts">${amts.map(v=>`<button class="${a===v?'on':''}" data-act="setTopAmt" data-v="${v}">${baht(v)}</button>`).join('')}</div>
+      <label class="lb">หรือใส่จำนวนเอง (บาท)</label><input class="inp" id="topCustom" type="number" min="1" max="50000" inputmode="numeric" value="${a&&!amts.includes(a)?a:''}" placeholder="เช่น 250">
+      <button class="btn ghost" data-act="setTopAmt" data-custom="1">สร้าง QR</button>
+      ${a>0?(S.promptpay?`<div class="center" style="margin-top:14px"><div class="pp">${ic('qr')} PromptPay</div><div class="qr" id="payQR">${q}</div><div class="mono" style="font-size:22px;font-weight:600;color:var(--brand)">${baht(a)}.00 ฿</div>
+        <div class="xs muted">${esc(S.ppName||'')} · พร้อมเพย์ ${esc(fmtPP(S.promptpay))}</div></div>
+        ${S.easyslip?`${topMsg}<button class="btn amber" style="margin-top:12px" data-act="pickPhoto" data-topup="1" ${st.st===1||ui.slipBusy?'disabled':''}>${ic('cam')} โอนแล้ว · แนบสลิปเพื่อเติมเงิน</button><p class="center xs muted" style="margin:6px 0 0">ระบบตรวจสลิปกับธนาคาร (EasySlip) แล้วเติมเงินตามยอดในสลิปทันที</p>`
+          :`<div class="alert amber" style="margin-top:12px">${ic('info')}<div>ตู้ยังไม่ได้เปิดระบบตรวจสลิป โอนแล้วส่งสลิปให้ผู้ดูแลเติมเงินให้</div></div>`}`
+        :`<div class="alert amber">${ic('info')}<div>ยังไม่ได้ตั้งเลขพร้อมเพย์ของร้าน</div></div>`):''}
+    </div>
+    <div class="sec"><h2>ประวัติกระเป๋าเงิน</h2></div>
+    <div class="card" style="padding:4px 16px">${WAL.tx.length?WAL.tx.map(t=>`<div class="tx"><span class="ic ${t.a>=0?'ok':'warn'}" style="width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none">${ic(t.a>=0?'plus':'wallet')}</span><div><div>${esc(t.n)}</div><div class="xs muted">${t.e?tFull(t.e):'-'}</div></div><b class="${t.a>=0?'in':'out'}">${t.a>=0?'+':'−'}${baht(Math.abs(t.a))}</b></div>`).join(''):`<div class="empty">ยังไม่มีรายการ</div>`}</div>`;
+};
+
 VIEWS.account=()=>{
   const ini=(me.name||me.sid).split(' ').map(s=>s[0]).join('').slice(0,2);
   return `<div class="top"><div class="grow"><div class="hello">บัญชี</div><h1>โปรไฟล์</h1></div></div>
-    <div class="card row"><div class="av">${esc(ini)}</div><div class="grow"><h3>${esc(me.name)}</h3><div class="sm muted">${esc(me.sid)} · ${esc(me.phone||'')}</div></div><span class="tag ${VF[me.verify][1]}">${VF[me.verify][0]}</span></div>
+    <div class="card"><div class="row">${avatarHtml(me)}<div class="grow"><h3>${esc(me.name)}</h3><div class="sm muted">${esc(me.sid)} · ${esc(me.phone||'')}</div></div><span class="tag ${VF[me.verify][1]}">${VF[me.verify][0]}</span></div>
+      <div class="btns"><button class="btn sm ghost" data-act="pickPhoto" data-av="1">${ic('cam')} ${me.av?'เปลี่ยนรูปโปรไฟล์':'อัปโหลดรูปโปรไฟล์'}</button>${me.av?`<button class="btn sm ghost" data-act="delAvatar">ลบรูป</button>`:''}</div></div>
+    <div class="wallet"><div class="k">เงินในกระเป๋า</div><div class="v">${baht(WAL.bal)} ฿</div><button class="btn sm" data-go="wallet">${ic('wallet')} เติมเงิน / ดูประวัติ</button></div>
     <div class="sec"><h2>บัญชีและความปลอดภัย</h2></div>
     <div class="card menu" style="padding:4px 16px">
       <button class="it" data-go="verify"><span class="ic ${VF[me.verify][1]}">${ic('shield')}</span><span style="flex:1"><b>การยืนยันตัวตน</b><div class="xs muted">บัตรนักศึกษา/บัตรประชาชน · รูปหน้า${me.studentId?' · รหัส '+esc(me.studentId):''}</div></span><span class="tag ${VF[me.verify][1]}">${VF[me.verify][0]}</span></button>
@@ -1093,7 +1230,8 @@ VIEWS.account=()=>{
     <div class="sec"><h2>การใช้งาน</h2></div>
     <div class="card menu" style="padding:4px 16px">
       <button class="it" data-go="history"><span class="ic teal">${ic('clock')}</span><span style="flex:1"><b>ประวัติการเช่า</b><div class="xs muted">${me.rentals} ครั้ง · ${me.hours} ชั่วโมง</div></span>${ic('chev')}</button>
-      <div class="it"><span class="ic teal">${ic('pin')}</span><span style="flex:1"><b>ตู้ที่ใช้</b><div class="xs muted">${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</div></span></div>
+      <button class="it" data-act="mapSheet"><span class="ic teal">${ic('pin')}</span><span style="flex:1"><b>ตู้ที่ใช้ · ดูแผนที่</b><div class="xs muted">${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</div></span>${ic('chev')}</button>
+      <button class="it" data-act="enableNotify"><span class="ic amber">${ic('info')}</span><span style="flex:1"><b>แจ้งเตือนเวลาคืนกล้อง</b><div class="xs muted">${notifyOn()?'เปิดอยู่ · เตือนก่อน 30 และ 10 นาที':'ยังไม่ได้เปิด · แตะเพื่อเปิด'}</div></span></button>
     </div>
     <button class="btn danger" style="margin-top:8px" data-act="logout">${ic('out')} ออกจากระบบ</button>
     <p class="foot">CamLock v${esc(S.fw||'')} · ${esc(S.locker?S.locker.name:'')} · ThingsBoard</p>`;
@@ -1104,18 +1242,21 @@ VIEWS.account=()=>{
    ===================================================================== */
 const userOf=idx=>AD.users.find(u=>u.idx==idx);
 function adminRentalCard(r){
-  const late=isLate(r), due=owed(r);
+  const late=isLate(r), due=debt(r);
   const acts=[];
   if(r.status==='verify'||(r.notified&&due>0))acts.push(`<button class="btn sm" data-act="aRent" data-a="confirm" data-rid="${r.id}">${ic('check')} ได้รับเงิน ${baht(due)} ฿</button>`,`<button class="btn sm ghost" data-act="aRent" data-a="reject" data-rid="${r.id}">ยังไม่ได้รับ</button>`);
   else if(r.status==='await')acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับเงินสดแล้ว</button>`);
   if(['await','verify','ready'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="cancel" data-rid="${r.id}">ยกเลิก</button>`);
-  if(r.status==='active'){if(due>0&&!r.notified)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿</button>`);acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="returned" data-rid="${r.id}">รับคืนเอง</button>`);}
-  if(r.status==='returned'){if(due>0&&!r.refunded)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿ เป็นเงินสด</button>`);if(!r.refunded&&r.deposit)acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">คืนมัดจำแล้ว ${baht(refundable(r))} ฿</button>`);}
+  if(r.status==='active'){if(due>0&&!r.notified)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿</button>`);acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="returned" data-rid="${r.id}">รับคืนเอง</button>`);
+    if(late&&!r.lost&&r.deposit)acts.push(`<button class="btn sm danger" data-act="aRent" data-a="lost" data-rid="${r.id}">ไม่คืนกล้อง · ยึดมัดจำ</button>`);}
+  if(r.status==='returned'){if(due>0&&!r.refunded)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿ เป็นเงินสด</button>`);
+    if(!r.refunded&&r.deposit){acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">${ic('check')} ตรวจผ่าน · คืนมัดจำ ${baht(refundable(r))} ฿ เข้ากระเป๋า</button>`);
+      if(!r.lost)acts.push(`<button class="btn sm danger" data-act="aRent" data-a="forfeit" data-rid="${r.id}">ชำรุด/เสียหาย · ไม่คืนมัดจำ</button>`);}}
   if(r.photoPick)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="pickup">${ic('cam')} หลักฐานรับ</button>`);
   if(r.photoRet)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="return">${ic('cam')} หลักฐานคืน</button>`);
   if(['returned','cancelled'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="delete" data-rid="${r.id}">${ic('trash')}</button>`);
   return `<div class="rcard"><div class="row"><div class="grow"><b style="font-family:var(--fd)">#${r.id} ${esc(r.camName)}</b><div class="meta">${esc(r.uname)} · ${esc(r.sid)}</div></div>${statusTag(r)}</div>
-    <div class="meta" style="margin-top:6px">${r.hours} ชม. · ยอด ${baht(r.amount)} ฿ · ชำระแล้ว ${baht(r.paid)} ฿${r.lateFee?` · ค่าปรับ ${baht(r.lateFee)} ฿`:''}${r.refunded?' · คืนมัดจำแล้ว':''}</div>
+    <div class="meta" style="margin-top:6px">${r.hours} ชม. · ยอด ${baht(r.amount)} ฿ · ชำระแล้ว ${baht(r.paid)} ฿${r.lateFee?` · ค่าปรับ ${baht(r.lateFee)} ฿`:''}${r.status==='active'&&late?` · ค่าปรับสะสม ${baht(lateNow(r))} ฿`:''}${r.forfeit?' · ยึดมัดจำ (ชำรุด)':r.lost?' · ยึดมัดจำ (ไม่คืน)':r.refunded?' · ปิดรายการแล้ว':''}</div>
     <div class="meta">${r.status==='active'?`ต้องคืน ${tFull(r.due)}${late?' · <b style="color:var(--warn)">เกิน '+dur(nowS()-r.due)+'</b>':''}`:r.status==='returned'?`คืนเมื่อ ${tFull(r.returned)}`:`จองเมื่อ ${tFull(r.created)}`}</div>
     ${acts.length?`<div class="btns">${acts.join('')}</div>`:''}</div>`;
 }
@@ -1175,7 +1316,7 @@ function dashStats(){
     totalIncome:earned.reduce((a,r)=>a+income(r),0),
     todayCount:earned.filter(r=>dayKey(when(r))===today).length,
     deposits:R.filter(r=>['ready','active'].includes(r.status)||(r.status==='returned'&&!r.refunded)).reduce((a,r)=>a+r.deposit,0),
-    owedTotal:R.filter(r=>r.status!=='cancelled').reduce((a,r)=>a+owed(r),0),
+    owedTotal:R.filter(r=>r.status!=='cancelled').reduce((a,r)=>a+debt(r),0),
     days,hours,active,late:active.filter(isLate),
     verify:R.filter(r=>r.status==='verify'||(r.notified&&owed(r)>0)),ready:R.filter(r=>r.status==='ready'),
     refunds:returned.filter(r=>!r.refunded&&r.deposit),
@@ -1254,17 +1395,17 @@ VIEWS.a_rent=()=>{
 };
 
 VIEWS.a_cams=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 8 ตัว</div><h1>กล้องในตู้</h1></div><button class="iconbtn" data-act="camSheet">${ic('plus')}</button></div>
-  <div class="cards2">${AD.cams.map(c=>`<div class="cam"><span class="ph">${ic('cam')}</span><span style="flex:1;min-width:0"><span class="nm">${esc(c.name)}</span> ${c.status==='rented'?'<span class="tag amber">ถูกเช่า</span>':c.status==='maint'?'<span class="tag grey">ซ่อมบำรุง</span>':'<span class="tag ok">ว่าง</span>'}
+  <div class="cards2">${AD.cams.map(c=>`<div class="cam">${camThumb(c)}<span style="flex:1;min-width:0"><span class="nm">${esc(c.name)}</span> ${c.status==='rented'?'<span class="tag amber">ถูกเช่า</span>':c.status==='maint'?'<span class="tag grey">ซ่อมบำรุง</span>':'<span class="tag ok">ว่าง</span>'}
     <span class="ln" style="display:block">+ ${esc(c.lens||'-')} · ${baht(c.price)} ฿/ชม. · มัดจำ ${baht(c.deposit)}</span></span>
     <button class="iconbtn" style="width:38px;height:38px;box-shadow:none;background:var(--surf2)" data-act="camSheet" data-id="${c.id}">${ic('edit')}</button></div>`).join('')||`<div class="card empty"><div class="ic teal">${ic('cam')}</div>ยังไม่มีกล้อง กด + เพื่อเพิ่ม</div>`}</div>
   <button class="btn ghost" data-act="camSheet" style="margin-top:12px">${ic('plus')} เพิ่มกล้อง</button>`;
 
 VIEWS.a_users=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 60 คน</div><h1>สมาชิก ${AD.users.length} คน</h1></div></div>
-  <div class="cards2">${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
+  <div class="cards2">${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row">${avatarHtml(u,'avsm')}
     <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}${u.studentId?' · รหัส '+esc(u.studentId):''}</div></div>${u.test?'<span class="tag teal">บัญชีทดสอบ</span>':u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':`<span class="tag ${VF[u.verify][1]}">${VF[u.verify][0]}</span>`}</div>
     ${u.verify==='pending'?`<div class="btns"><button class="btn sm" data-act="aViewId" data-idx="${u.idx}">${ic('id')} ดูรูปยืนยันตัวตน</button></div>`:''}
-    <div class="meta" style="margin-top:6px">เช่า ${u.rentals} ครั้ง · ${u.hours} ชม. · คืนช้า ${u.late} ครั้ง${u.created?' · สมัคร '+tDM(u.created):''}</div>
-    ${u.idx!==me.idx?`<div class="btns"><button class="btn sm ghost" data-act="aUserPw" data-idx="${u.idx}">${ic('key')} ตั้งรหัสใหม่</button>
+    <div class="meta" style="margin-top:6px">เช่า ${u.rentals} ครั้ง · ${u.hours} ชม. · คืนช้า ${u.late} ครั้ง${u.created?' · สมัคร '+tDM(u.created):''} · <b>กระเป๋า ${baht(u.wallet||0)} ฿</b></div>
+    ${u.idx!==me.idx?`<div class="btns"><button class="btn sm ghost" data-act="aWallet" data-idx="${u.idx}">${ic('wallet')} เติม/หักเงิน</button><button class="btn sm ghost" data-act="aUserPw" data-idx="${u.idx}">${ic('key')} ตั้งรหัสใหม่</button>
       <button class="btn sm ghost" data-act="aUser" data-a="${u.disabled?'enable':'disable'}" data-idx="${u.idx}">${u.disabled?'ปลดระงับ':'ระงับ'}</button>
       <button class="btn sm ghost" data-act="aUser" data-a="${u.admin?'unadmin':'admin'}" data-idx="${u.idx}">${u.admin?'เอาสิทธิ์ผู้ดูแลออก':'ตั้งเป็นผู้ดูแล'}</button>
       <button class="btn sm danger" data-act="aUser" data-a="delete" data-idx="${u.idx}">${ic('trash')}</button></div>`:'<div class="meta" style="margin-top:4px">(บัญชีของคุณ)</div>'}</div>`).join('')}</div>`;
@@ -1288,6 +1429,11 @@ VIEWS.a_set=()=>{
   <div class="card"><h3 style="margin-bottom:10px">กลอนและประตู</h3>
     <div class="grid2" style="margin:0"><div><label class="lb">กลอนเปิดค้างสูงสุด (วินาที)</label><input class="inp" id="sUnlock" type="number" min="3" max="60" step="1" value="${s.unlockMs/1000}"></div>
     <div><label class="lb">เตือนประตูเปิดค้าง (วินาที)</label><input class="inp" id="sAlarm" type="number" min="10" max="3600" value="${s.alarmSec}"></div></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">ค่าปรับและมัดจำ</h3>
+    <div class="grid3"><div><label class="lb">ปรับนาทีละ (บาท)</label><input class="inp" id="sLate" type="number" min="0" max="10000" value="${s.lateFeeMin??100}"></div>
+    <div><label class="lb">ผ่อนผัน (นาที)</label><input class="inp" id="sGrace" type="number" min="0" max="120" value="${s.lateGraceMin??0}"></div>
+    <div><label class="lb">ไม่คืนเกิน (ชม.) = ยึดมัดจำ</label><input class="inp" id="sLost" type="number" min="0" max="720" value="${s.lostHours??24}"></div></div>
+    <p class="xs muted" style="margin:0">กล้องชำรุด/เสียหาย: กด “ชำรุด/เสียหาย · ไม่คืนมัดจำ” ในหน้าการเช่าหลังตรวจสภาพ</p></div>
   <button class="btn" data-act="saveSettings">บันทึกการตั้งค่า</button>
   <div class="sec"><h2>บัญชีผู้ดูแล</h2></div>
   <div class="card menu" style="padding:4px 16px"><button class="it" data-act="pwSheet"><span class="ic amber">${ic('key')}</span><span style="flex:1"><b>เปลี่ยนรหัสผ่านของฉัน</b><div class="xs muted">${esc(me.sid)}</div></span>${ic('chev')}</button></div>
@@ -1312,7 +1458,7 @@ ACT.refresh=async()=>{await Promise.all([loadStatus(),loadMe(),loadAdmin()]);ui.
 ACT.pickCam=d=>{ui.camId=+d.id;push('camDetail',{id:+d.id});};
 ACT.setHours=d=>{ui.hours=+d.h;softRender();};
 ACT.pickPhoto=d=>{const i=$('#filePick');i.value='';if(d.cap)i.setAttribute('capture',d.cap);else i.removeAttribute('capture');
-  i.dataset.vk=d.vk||'';i.dataset.ev=d.ev||'';i.dataset.slip=d.slip||'';i.dataset.rid=d.rid||'';i.click();};
+  i.dataset.vk=d.vk||'';i.dataset.ev=d.ev||'';i.dataset.slip=d.slip||'';i.dataset.rid=d.rid||'';i.dataset.cam=d.cam||'';i.dataset.av=d.av||'';i.dataset.topup=d.topup||'';i.click();};
 ACT.verifySubmit=async(d,b)=>{b.disabled=true;const j=await rpc('verifySubmit',{studentId:($('#vStu')||{}).value||''});b.disabled=false;
   if(!j.ok){toast(j.msg);return;}ui.vphoto={};me=j.user;toast('ส่งแล้ว รอผู้ดูแลตรวจ');render(true);};
 ACT.doRent=async(d,b)=>{b.disabled=true;const j=await rpc('rent',{cam:d.id,hours:ui.hours});b.disabled=false;
@@ -1349,12 +1495,31 @@ ACT.lockNow=async(d,b)=>{if(b)b.disabled=true;const j=await rpc('lockNow');if(!j
 ACT.reopen=async d=>{const r=myRentals.find(x=>x.id==d.rid);const j=await rpc('open',{rid:d.rid});if(!j.ok){toast(j.msg);return;}
   Object.assign(ui.openFlow,{t:Date.now(),action:j.action,sawOpen:false,closed:false,openAt:0});S.unlocking=true;softRender();};
 ACT.closeOpen=async()=>{ui.openFlow=null;await loadMe();go(openRental()?'active':'home');};
-ACT.extendSheet=d=>{const r=myRentals.find(x=>x.id==d.rid);if(!r)return;
+ACT.extendSheet=d=>{const r=myRentals.find(x=>x.id==d.rid);if(!r)return;const h=Number(d.h||0);
   sheet(`<h2>ต่อเวลาเช่า</h2><p class="sm muted" style="margin:4px 0 14px">${esc(r.camName)} · ${baht(r.price)} ฿/ชม. · กำหนดคืนเดิม ${tFull(r.due)}</p>
-    <div class="hrs">${[1,2,3,6].map(h=>`<button data-act="doExtend" data-rid="${r.id}" data-h="${h}">+${h} ชม.<div class="xs muted" style="font-family:var(--fb);font-weight:400">${baht(r.price*h)} ฿</div></button>`).join('')}</div>
-    <p class="xs muted" style="margin:12px 0 0">ค่าต่อเวลาจะเพิ่มในยอดค้างชำระ ชำระผ่านพร้อมเพย์ได้ทันที</p><button class="btn ghost" style="margin-top:14px" data-act="closeSheet">ปิด</button>`);};
-ACT.doExtend=async d=>{closeSheet();const j=await rpc('extend',{rid:d.rid,hours:d.h});if(!j.ok){toast(j.msg);return;}await loadMe();toast('ต่อเวลาแล้ว +'+d.h+' ชม.');
+    <div class="hrs">${[1,2,3,6].map(x=>`<button class="${x===h?'on':''}" data-act="extendSheet" data-rid="${r.id}" data-h="${x}">+${x} ชม.<div class="xs muted" style="font-family:var(--fb);font-weight:400">${baht(r.price*x)} ฿</div></button>`).join('')}</div>
+    ${h?`<div style="margin-top:14px"><div class="kv"><span>ต่อเวลา ${h} ชม. · คืนใหม่ ${tFull(r.due+h*3600)}</span><b>${baht(r.price*h)} ฿</b></div>
+      ${!me.test&&WAL.bal>=r.price*h?`<button class="btn" style="margin-top:10px" data-act="doExtend" data-rid="${r.id}" data-h="${h}" data-w="1">${ic('wallet')} จ่ายจากกระเป๋า (คงเหลือ ${baht(WAL.bal)} ฿)</button>`:''}
+      <button class="btn ${!me.test&&WAL.bal>=r.price*h?'ghost':'amber'}" style="margin-top:10px" data-act="doExtend" data-rid="${r.id}" data-h="${h}">${ic('qr')} ${me.test?'ต่อเวลา (บัญชีทดสอบ)':'จ่ายด้วย QR พร้อมเพย์'}</button></div>`
+      :`<p class="xs muted" style="margin:12px 0 0">เลือกจำนวนชั่วโมง แล้วเลือกจ่ายจากกระเป๋าหรือสแกน QR</p>`}
+    <button class="btn ghost" style="margin-top:10px" data-act="closeSheet">ปิด</button>`);};
+ACT.doExtend=async(d,b)=>{if(b)b.disabled=true;const j=await rpc('extend',{rid:d.rid,hours:d.h,wallet:d.w?1:0});if(b)b.disabled=false;if(!j.ok){toast(j.msg);return;}closeSheet();await loadMe();toast('ต่อเวลาแล้ว +'+d.h+' ชม.');
   if(owed(j.rental)>0)push('pay',{rid:j.rental.id});else render(false);};
+ACT.payWallet=async(d,b)=>{b.disabled=true;const j=await rpc('payWallet',{rid:d.rid});if(!j.ok){b.disabled=false;toast(j.msg);return;}await loadMe();toast('จ่ายจากกระเป๋าแล้ว คงเหลือ '+baht(j.wallet)+' ฿');render(false);};
+ACT.setTopAmt=d=>{let v=Number(d.v||0);if(d.custom){v=Math.floor(Number(($('#topCustom')||{}).value||0));if(!(v>=1&&v<=50000)){toast('ใส่จำนวน 1–50,000 บาท');return;}}ui.topAmt=v;if(WAL.top&&WAL.top.st!==1)WAL.top={st:0,msg:''};render(false);};
+ACT.enableNotify=async()=>{if(!('Notification' in window)){toast('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน');return;}
+  let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();
+  if(p!=='granted'){toast('ไม่ได้รับอนุญาต เปิดได้ที่การตั้งค่าเว็บไซต์ของเบราว์เซอร์');return;}
+  await regSW();notify('เปิดการแจ้งเตือนแล้ว','จะเตือนก่อนถึงเวลาคืน 30 และ 10 นาที','test');render(false);};
+ACT.mapSheet=()=>sheet(`<h2>ตำแหน่งตู้</h2><div style="height:10px"></div>${campusMap()}<button class="btn ghost" style="margin-top:12px" data-act="closeSheet">ปิด</button>`);
+ACT.delAvatar=async()=>{const j=await rpc('avatarUpload',{img:''});if(j.ok){me=j.user;toast('ลบรูปแล้ว');render(false);}else toast(j.msg);};
+ACT.delCamPhoto=async d=>{const j=await rpc('adminCamPhoto',{id:d.id,img:''});toast(j.msg);await loadAdmin();await loadMe();closeSheet();softRender();};
+ACT.aWallet=d=>{const u=userOf(d.idx);if(!u)return;sheet(`<h2>เติม/หักเงิน</h2><p class="sm muted" style="margin:4px 0 12px">${esc(u.name)} · คงเหลือ ${baht(u.wallet||0)} ฿</p>
+  <label class="lb">จำนวนเงิน (บาท) ใส่ลบเพื่อหัก เช่น -200</label><input class="inp" id="wAmt" type="number" inputmode="numeric" placeholder="500">
+  <button class="btn" data-act="aWalletSave" data-idx="${u.idx}">บันทึก</button><button class="btn ghost" data-act="closeSheet">ยกเลิก</button>`);};
+ACT.aWalletSave=async d=>{const v=Math.trunc(Number(($('#wAmt')||{}).value||0));if(!v){toast('ใส่จำนวนเงิน');return;}
+  if(!await confirmBox(v>0?`เติมเงิน ${baht(v)} บาท?`:`หักเงิน ${baht(-v)} บาท?`,'บันทึกในประวัติกระเป๋าของสมาชิก','ยืนยัน',v<0))return;
+  const j=await rpc('adminUser',{idx:d.idx,action:'credit',amount:v});toast(j.msg);closeSheet();await loadAdmin();softRender();};
 ACT.closeSheet=()=>closeSheet();
 ACT.pwSheet=()=>{sheet(`<h2>เปลี่ยนรหัสผ่าน</h2><div style="height:12px"></div>
   <label class="lb">รหัสผ่านเดิม</label><input class="inp" type="password" id="pwOld" autocomplete="current-password">
@@ -1372,12 +1537,13 @@ ACT.aLock=async()=>{const j=await rpc('lockNow');toast(j.ok?'ล็อกแล�
 ACT.aEvidence=async d=>{sheet(`<h2>รูปหลักฐาน${d.k==='return'?'การคืน':'การรับ'} #${d.rid}</h2><div class="vimg" id="evImg" style="aspect-ratio:4/3;margin-top:12px"><div class="spin"></div></div><button class="btn ghost" data-act="closeSheet">ปิด</button>`);
   const j=await rpc('adminEvidence',{rid:d.rid,kind:d.k});const b=$('#evImg');if(b)b.innerHTML=j.ok?`<img src="${j.img}" alt="" style="object-fit:contain">`:`<span class="xs muted">${esc(j.msg)}</span>`;};
 ACT.aRent=async d=>{
-  const labels={cancel:['ยกเลิกรายการนี้?','กล้องจะกลับมาว่าง ถ้าลูกค้าโอนเงินแล้วต้องคืนเงินเอง'],delete:['ลบรายการนี้?','ลบออกจากประวัติถาวร'],returned:['รับคืนกล้องเอง?','ใช้เมื่อลูกค้าคืนกล้องกับผู้ดูแลโดยตรง ระบบจะไม่คิดค่าปรับ'],reject:['ยังไม่ได้รับเงิน?','รายการจะกลับไปเป็น “รอชำระเงิน” ให้ลูกค้าโอนใหม่']};
-  if(labels[d.a]&&!await confirmBox(labels[d.a][0],labels[d.a][1],'ยืนยัน',d.a==='delete'||d.a==='cancel'))return;
+  const labels={cancel:['ยกเลิกรายการนี้?','กล้องจะกลับมาว่าง ถ้าลูกค้าโอนเงินแล้วต้องคืนเงินเอง'],delete:['ลบรายการนี้?','ลบออกจากประวัติถาวร'],returned:['รับคืนกล้องเอง?','ใช้เมื่อลูกค้าคืนกล้องกับผู้ดูแลโดยตรง ระบบคิดค่าปรับตามเวลาที่เกิน'],refund:['ตรวจสภาพผ่าน คืนมัดจำ?','เงินมัดจำ (หักค่าปรับแล้ว) จะเข้ากระเป๋าของผู้เช่าทันที'],forfeit:['กล้องชำรุด/เสียหาย?','ไม่คืนมัดจำทั้งสิ้น และย้อนกลับไม่ได้'],lost:['ไม่คืนกล้อง?','ยึดมัดจำทั้งหมด ผู้เช่าจะไม่ได้มัดจำคืน'],reject:['ยังไม่ได้รับเงิน?','รายการจะกลับไปเป็น “รอชำระเงิน” ให้ลูกค้าโอนใหม่']};
+  if(labels[d.a]&&!await confirmBox(labels[d.a][0],labels[d.a][1],'ยืนยัน',['delete','cancel','forfeit','lost'].includes(d.a)))return;
   const j=await rpc('adminRental',{rid:d.rid,action:d.a});toast(j.msg);await loadAdmin();await loadStatus();softRender();};
 ACT.setFilter=d=>{ui.filter=d.f;render(false);};
 ACT.camSheet=d=>{const c=d&&d.id!==undefined?AD.cams.find(x=>x.id==d.id):null;
   sheet(`<h2>${c?'แก้ไขกล้อง':'เพิ่มกล้อง'}</h2><div style="height:12px"></div>
+  ${c?`<div style="margin-bottom:10px">${camThumb(c,true)}<div class="btns" style="margin-top:0"><button class="btn sm" data-act="pickPhoto" data-cam="${c.id}">${ic('cam')} ${c.ph?'เปลี่ยนรูปกล้อง':'อัปโหลดรูปกล้อง'}</button>${c.ph?`<button class="btn sm ghost" data-act="delCamPhoto" data-id="${c.id}">ลบรูป</button>`:''}</div></div>`:`<p class="xs muted" style="margin:0 0 10px">บันทึกกล้องก่อน แล้วเปิดแก้ไขอีกครั้งเพื่อใส่รูป</p>`}
   <label class="lb">ชื่อรุ่น</label><input class="inp" id="cName" value="${esc(c?c.name:'')}" maxlength="38" placeholder="Canon EOS R50">
   <label class="lb">เลนส์/อุปกรณ์ที่ให้</label><input class="inp" id="cLens" value="${esc(c?c.lens:'')}" maxlength="38" placeholder="RF-S 18-45mm">
   <label class="lb">สเปก (คั่นด้วย | )</label><input class="inp" id="cSpecs" value="${esc(c?c.specs:'')}" maxlength="70" placeholder="APS-C 24.2MP|4K 30p|375 g">
@@ -1404,7 +1570,7 @@ ACT.doUserPw=async d=>{const j=await rpc('adminUser',{idx:d.idx,action:'password
 ACT.loadSettings=async()=>{const j=await rpc('adminSettings');if(j.ok){ui.settings=j;render(false);}};
 ACT.toggleApprove=(d,b)=>{ui.settings.approve=!ui.settings.approve;b.classList.toggle('on',ui.settings.approve);};
 ACT.saveSettings=async()=>{const j=await rpc('adminSettingsSave',{lockerName:$('#sName').value,lockerLoc:$('#sLoc').value,lockerNote:$('#sNote').value,promptpay:$('#sPP').value,ppName:($('#sPPName')||{}).value||'',
-  approve:ui.settings.approve?1:0,slipKey:($('#sSlip')||{}).value||'',unlockMs:Math.round(parseFloat($('#sUnlock').value)*1000),alarmSec:$('#sAlarm').value});toast(j.msg);if(j.ok){ui.settings=null;await loadStatus();render(false);}};
+  approve:ui.settings.approve?1:0,lateFeeMin:($('#sLate')||{}).value,lateGraceMin:($('#sGrace')||{}).value,lostHours:($('#sLost')||{}).value,slipKey:($('#sSlip')||{}).value||'',unlockMs:Math.round(parseFloat($('#sUnlock').value)*1000),alarmSec:$('#sAlarm').value});toast(j.msg);if(j.ok){ui.settings=null;await loadStatus();render(false);}};
 ACT.loadLog=async()=>{const j=await rpc('adminLog');if(j.ok){ui.logs=j;softRender();}};
 ACT.printQR=()=>{const url=appUrl();$('#printqr').innerHTML=`<h1 style="font-size:40px">${esc(S.locker?S.locker.name:'CamLock')}</h1><p style="font-size:20px">สแกนเพื่อเช่า/คืนกล้อง</p>${QR.svg(url)}<p style="font-size:22px;font-family:monospace">${esc(url)}</p>`;window.print();};
 
@@ -1434,9 +1600,10 @@ async function loop(){
   if(live?(tick%15===0):(fast||tick%3===0))await loadStatus();
   else if(cur().name==='a_home'){const t=$('#lastSeen');if(t)t.textContent=S.lastSeen?dur((Date.now()-S.lastSeen)/1000)+'ที่แล้ว':'-';}
   if(me&&(tick%20===0||(fast&&tick%2===0)||(c==='pay'&&tick%4===0)))await loadMe();
+  if(me&&!isAdmin()&&tick%5===0)checkDue();
   if(isAdmin()&&(c==='a_home'||c==='a_rent')&&tick%(live?30:10)===0)await loadAdmin();
   if(me){
-    if(c==='active'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||c==='verify'||(c==='a_home'&&tick%5===0)||(c==='a_set'&&tick%5===0))softRender();
+    if(c==='active'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||c==='verify'||c==='wallet'||(c==='a_home'&&tick%5===0)||(c==='a_set'&&tick%5===0))softRender();
     else renderTabs();
   }
   setTimeout(loop,1000);
@@ -1445,7 +1612,7 @@ async function loop(){
 async function boot(){
   // เปิดเว็บได้ทันทีด้วยข้อมูลล่าสุดที่จำไว้ แล้วค่อยอัปเดตจากตู้ (ไม่ต้องรอตู้ตอบ)
   const c=token&&readCache('cl_me');
-  if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];usingCache=true;
+  if(c&&c.user){me=c.user;myRentals=c.rentals||[];cams=c.cams||[];if(c.wal)WAL=c.wal;usingCache=true;
     const a=readCache('cl_ad');if(a&&a.rentals&&me.admin)AD=a;route={tab:isAdmin()?'a_home':'home',stack:[]};}
   ui.booting=!!token&&!me;render(true);
   await loadStatus();
@@ -1453,6 +1620,7 @@ async function boot(){
     if(me){await loadAdmin();if(!had)route={tab:isAdmin()?'a_home':'home',stack:[]};}
     else if(j&&j.code===401)logoutLocal();}
   ui.booting=false;render(!usingCache);loop();
+  if(notifyOn())regSW();
 }
 
 boot();
