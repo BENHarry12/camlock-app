@@ -64,9 +64,35 @@ self.onInit = function () {
     return { ok: false, msg: 'ไม่รู้จักคำขอ' };
   }
 
+  // ---------- ส่งข้อมูลสด: WebSocket ของ ThingsBoard → แอป (ไม่ต้องรอรอบดึงข้อมูล) ----------
+  var subs = [], ws = null, wsTimer = null;
+  function push(msg) { subs.forEach(function (s) { try { s.src.postMessage(Object.assign({ camlock: 1 }, msg), s.origin); } catch (e) {} }); }
+  async function openWs() {
+    if (ws || !DEV) return;
+    try { if (!jwt || Date.now() > exp) await login(); } catch (e) { wsTimer = setTimeout(openWs, 5000); return; }
+    ws = self._ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/ws');
+    ws.onopen = function () {
+      ws.send(JSON.stringify({ authCmd: { cmdId: 0, token: jwt }, cmds: [
+        { type: 'TIMESERIES', entityType: 'DEVICE', entityId: DEV, scope: 'LATEST_TELEMETRY', cmdId: 1 },
+        { type: 'ATTRIBUTES', entityType: 'DEVICE', entityId: DEV, scope: 'CLIENT_SCOPE', cmdId: 2 }] }));
+      push({ push: 'live', on: true });
+    };
+    ws.onmessage = function (e) {
+      try {
+        var d = JSON.parse(e.data);
+        if (d.data && (d.subscriptionId === 1 || d.subscriptionId === 2)) push({ push: d.subscriptionId === 1 ? 'ts' : 'attr', data: d.data });
+      } catch (err) {}
+    };
+    ws.onclose = function () { ws = null; push({ push: 'live', on: false }); jwt = ''; clearTimeout(wsTimer); wsTimer = setTimeout(openWs, 3000); };
+  }
+
   self._onMessage = async function (ev) {
     if (ALLOWED.indexOf(ev.origin) < 0) return;
     var m = ev.data;
+    if (m && m.camlock === 1 && m.kind === 'subscribe') {
+      if (!subs.some(function (s) { return s.src === ev.source; })) subs.push({ src: ev.source, origin: ev.origin });
+      openWs(); return;
+    }
     if (!m || m.camlock !== 1 || !m.id) return;
     var res;
     try { res = await handle(m); lastState = 'ล่าสุด: ' + (m.method || m.kind) + ' ' + (res && res.ok ? 'สำเร็จ' : 'ไม่สำเร็จ'); }
@@ -125,4 +151,5 @@ self.onInit = function () {
 
 self.onDestroy = function () {
   if (self._onMessage) window.removeEventListener('message', self._onMessage);
+  if (self._ws) try { self._ws.close(); } catch (e) {}
 };

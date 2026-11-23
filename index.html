@@ -259,6 +259,64 @@ h3{font-size:16px;font-weight:600}
 .vimg img{width:100%;height:100%;object-fit:cover}
 label.btn input{display:none}
 .evcard .vthumb{margin:10px 0 0}
+/* ---------- แดชบอร์ด ---------- */
+@media(min-width:900px){.app.wide{width:min(1360px,97vw);height:calc(100vh - 32px);border-radius:26px}.app.wide .scr{padding:24px 28px}.app.wide .tabs{justify-content:center}.app.wide .tabs button{max-width:130px}}
+.dash-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dash-head h1{font-size:23px}
+.app.wide .dash-head h1{font-size:28px}
+.livepill{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--fn);letter-spacing:.5px;padding:5px 10px;border-radius:99px;background:#E9EEF0;color:var(--ink3)}
+.livepill i{width:7px;height:7px;border-radius:50%;background:var(--ink3)}
+.livepill.on{background:#E3F6EC;color:var(--ok)}.livepill.on i{background:#22C55E;box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:ping 1.6s infinite}
+.livepill.sm{padding:3px 8px;font-size:10px}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.app.wide .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--surf);border-radius:18px;padding:13px 14px;box-shadow:var(--sh);min-width:0}
+.kpi.clk{cursor:pointer}.kpi.clk:hover{box-shadow:0 0 0 2px var(--brandSoft),var(--sh)}
+.kpi-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink3)}
+.kpi-h .ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center}.kpi-h .ic svg{width:16px;height:16px}
+.kpi-v{font:700 24px var(--fd);margin:4px 0 0;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-s{font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic.violet{background:#EEE8FA;color:#7C5CC4}
+.dash{display:grid;grid-template-columns:1fr;gap:12px}
+.app.wide .dash{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.app.wide .dash .wide2{grid-column:span 2}
+@media(max-width:760px){.app.wide .dash .wide2{grid-column:auto}}
+.dcard{margin:0;min-width:0}
+.dc-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.dc-h h3{font-size:15px}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font:10px var(--fb);fill:var(--ink3)}
+.chart .gl{stroke:#EEF3F4;stroke-width:1}
+.hbars{display:flex;align-items:flex-end;gap:4px;padding-bottom:18px;position:relative}
+.hbc{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative;min-width:0}
+.hbc i{display:block;width:72%;max-width:34px;border-radius:5px 5px 2px 2px;transition:height .5s}
+.hbv{font-size:9.5px;color:var(--ink2);white-space:nowrap;margin-bottom:2px}
+.hbl{position:absolute;bottom:-17px;font-size:10px;color:var(--ink3)}
+.chart.line{width:100%;display:block}
+.lnl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink3);margin-top:2px}
+.donut{display:flex;align-items:center;gap:14px}
+.donut svg{width:130px;flex:none}
+.dn-v{font:700 24px var(--fd);fill:var(--ink)}.dn-s{font:11px var(--fb);fill:var(--ink3)}
+.legend{flex:1;display:flex;flex-direction:column;gap:5px;font-size:12.5px;min-width:0}
+.legend div{display:flex;align-items:center;gap:7px}.legend i{width:10px;height:10px;border-radius:3px;flex:none}.legend b{margin-left:auto}
+.hb{margin:7px 0}.hb-l{display:flex;justify-content:space-between;font-size:12.5px;gap:8px}.hb-l span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-t{height:8px;border-radius:5px;background:#EEF3F4;margin-top:4px;overflow:hidden}.hb-t i{display:block;height:100%;border-radius:5px;transition:width .5s}
+.health{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:12px;font-size:12px}
+.health div{display:flex;flex-direction:column}.health span{color:var(--ink3)}.health b{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px}
+.sig{display:inline-flex;align-items:flex-end;gap:2px;height:12px}.sig i{width:3px;background:#D5DEE0;border-radius:1px}
+.sig i:nth-child(1){height:4px}.sig i:nth-child(2){height:7px}.sig i:nth-child(3){height:10px}.sig i:nth-child(4){height:12px}
+.sig.s1 i:nth-child(-n+1),.sig.s2 i:nth-child(-n+2),.sig.s3 i:nth-child(-n+3),.sig.s4 i{background:var(--ok)}
+.mini-k{display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-top:6px}.mini-k b{color:var(--ink)}
+.act-it{padding:8px 0;border-bottom:1px solid var(--line)}.act-it:last-child{border:0}
+.pbar{height:6px;background:#EEF3F4;border-radius:4px;margin-top:6px;overflow:hidden}.pbar i{display:block;height:100%;border-radius:4px}
+.warn-t{color:var(--warn);font-weight:600}
+.camgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cg{border-radius:12px;padding:9px 10px;background:var(--okSoft);font-size:12px;min-width:0}.cg b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cg.rented{background:var(--accentSoft)}.cg.maint{background:#EEF1F2}.cg span{color:var(--ink2)}
+.feed{max-height:300px;overflow:auto}.feed .it.fresh{animation:fresh 2.5s}
+@keyframes fresh{0%{background:#DFF6EA}100%{background:transparent}}
+.app.wide .cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.app.wide .cards2 .rcard{margin:0}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
@@ -275,7 +333,7 @@ label.btn input{display:none}
 <!-- ช่องเลือกรูปอยู่นอกส่วนที่วาดใหม่ทุกวินาที ไม่งั้นเลือกรูปแล้วเหตุการณ์หาย -->
 <input type="file" id="filePick" accept="image/*" hidden>
 
-<script src="config.js?v=9"></script>
+<script src="config.js?v=10"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -427,7 +485,9 @@ const pending={};
 window.addEventListener('message',ev=>{
   if(ev.origin!==TB_ORIGIN)return;
   const m=ev.data;if(!m||m.camlock!==1)return;
-  if(m.ready&&bridgeFrame&&bridgeFrame._resolve){bridgeFrame._resolve(bridgeFrame);bridgeFrame._resolve=null;}
+  if(m.ready){if(bridgeFrame&&bridgeFrame._resolve){bridgeFrame._resolve(bridgeFrame);bridgeFrame._resolve=null;}
+    if(bridgeFrame)bridgeFrame.contentWindow.postMessage({camlock:1,kind:'subscribe'},TB_ORIGIN);}
+  if(m.push){onPush(m);return;}
   if(m.id&&pending[m.id]){pending[m.id](m.res);delete pending[m.id];}
 });
 function bridge(){
@@ -461,19 +521,57 @@ async function rpc(method,data){
   return j;
 }
 // สถานะตู้: telemetry/attributes ล่าสุดใน ThingsBoard (ไม่รบกวนตู้)
+/* ---------- สถานะตู้: เก็บค่าดิบจาก ThingsBoard แล้วคำนวณ S ----------
+   ได้มาสองทาง: ดึงเป็นรอบ (loadStatus) และส่งสดผ่าน WebSocket (push จาก Bridge) */
+const RT={}, RA={};
+let live=false, lastPushAt=0, refreshTimer=null;
+const parseVal=v=>{if(typeof v!=='string')return v;if(v==='true')return true;if(v==='false')return false;if(v!==''&&!isNaN(v))return Number(v);return v;};
+function mergeTs(data,fromPush){
+  for(const [k,arr] of Object.entries(data||{})){
+    if(!arr||!arr.length)continue;
+    const list=arr.map(x=>Array.isArray(x)?{ts:x[0],value:x[1]}:x).sort((a,b)=>a.ts-b.ts);
+    for(const e of list){
+      if(k==='event'){if(fromPush)onEvent(e);continue;}
+      if(!RT[k]||e.ts>=RT[k].ts)RT[k]=e;
+    }
+  }
+}
+function mergeAttr(data){
+  if(Array.isArray(data))data.forEach(x=>RA[x.key]=parseVal(x.value));
+  else for(const [k,arr] of Object.entries(data||{}))RA[k]=parseVal(Array.isArray(arr)&&arr.length?(Array.isArray(arr[0])?arr[0][1]:arr[0].value):arr);
+}
+function applyRaw(){
+  const v=k=>RT[k]?parseVal(RT[k].value):null, b=k=>v(k)===true, n=k=>Number(v(k)||0), A=RA;
+  const ts=Math.max(0,...Object.values(RT).map(x=>x.ts||0));
+  online=ts>0&&Date.now()-ts<35000;
+  S={fw:A.firmware||'',locker:{name:A.lockerName||'ตู้ '+(A.lockerId||''),loc:A.lockerLoc||'',note:A.lockerNote||''},
+    door:b('doorOpen')?'open':'closed',unlocking:b('lockActive'),alarm:b('alarm'),returning:b('returning'),
+    available:n('available'),cams:n('camCount'),unlocks:n('unlockCount'),rssi:n('rssi'),uptime:n('uptime'),heap:n('heap'),
+    activeCount:n('activeCount'),overdueCount:n('overdueCount'),readyCount:n('readyCount'),pendingPay:n('pendingPay'),
+    pendingVerify:n('pendingVerify'),refundPending:n('refundPending'),members:n('members'),hasCounts:RT.activeCount!=null,
+    ssid:A.ssid||'',ip:A.ip||'',promptpay:A.promptpay||'',approve:A.approve!==false,unlockMs:A.unlockMs||3000,
+    reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts,uptimeTs:RT.uptime?RT.uptime.ts:0};
+}
+// เหตุการณ์สดจากตู้ (ทุกบรรทัดของบันทึก) → ฟีดแดชบอร์ด + ดึงข้อมูลใหม่ทันที
+function onEvent(e){
+  ui.feed=ui.feed||[];
+  if(ui.feed.some(x=>x.ts===e.ts))return;
+  ui.feed.unshift({ts:e.ts,m:String(e.value),fresh:Date.now()});ui.feed=ui.feed.slice(0,60);
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(async()=>{await Promise.all([loadMe(),loadAdmin()]);softRender();},350);
+}
+function onPush(m){
+  if(m.push==='live'){live=!!m.on;return;}
+  lastPushAt=Date.now();
+  if(m.push==='ts')mergeTs(m.data,true);else if(m.push==='attr')mergeAttr(m.data);
+  applyRaw();softRender();
+}
 async function loadStatus(){
   if(!BRIDGE){online=false;return;}
   try{
     const j=await tbCall({kind:'status'});
     if(!j.ok){online=false;lastErr=j.msg;return;}
-    const t=j.timeseries||{},A={};(j.attributes||[]).forEach(x=>A[x.key]=x.value);
-    const v=k=>t[k]&&t[k][0]?t[k][0].value:null, b=k=>String(v(k))==='true', n=k=>Number(v(k)||0);
-    const ts=Math.max(0,...Object.values(t).map(x=>x&&x[0]?x[0].ts:0));
-    online=Date.now()-ts<35000;
-    S={fw:A.firmware||'',locker:{name:A.lockerName||'ตู้ '+(A.lockerId||''),loc:A.lockerLoc||'',note:A.lockerNote||''},
-      door:b('doorOpen')?'open':'closed',unlocking:b('lockActive'),alarm:b('alarm'),returning:b('returning'),
-      available:n('available'),cams:n('camCount'),unlocks:n('unlockCount'),rssi:n('rssi'),uptime:n('uptime'),heap:n('heap'),
-      ssid:A.ssid||'',ip:A.ip||'',promptpay:A.promptpay||'',approve:A.approve!==false,unlockMs:A.unlockMs||3000,reed:A.reedSwitch!==false,autoClose:A.autoCloseSec||10,epoch:nowS(),lastSeen:ts};
+    mergeTs(j.timeseries,false);mergeAttr(j.attributes||[]);applyRaw();
   }catch(e){online=false;lastErr=e.message;}
 }
 async function loadMe(){if(!token)return;const j=await rpc('me');if(j.ok){me=j.user;myRentals=j.rentals.sort((a,b)=>b.id-a.id);cams=j.cams;}return j;}
@@ -507,6 +605,7 @@ function back(){route.stack.pop();render(true);}
 const cur=()=>route.stack.length?route.stack[route.stack.length-1]:{name:route.tab,params:{}};
 
 function renderTabs(){
+  $('#app').classList.toggle('wide',!!isAdmin());
   const nav=$('#tabs');
   if(!me){nav.classList.add('hide');return;}
   nav.classList.remove('hide');
@@ -908,27 +1007,129 @@ function adminRentalCard(r){
     ${acts.length?`<div class="btns">${acts.join('')}</div>`:''}</div>`;
 }
 
+/* =====================================================================
+   แดชบอร์ดผู้ดูแล
+   ===================================================================== */
+const COL={brand:'#0C5A5F',brand2:'#2E8F96',accent:'#E08A1E',ok:'#157A52',warn:'#B4410F',mute:'#C9D6D9',blue:'#3B7DD8',violet:'#7C5CC4'};
+// กราฟแท่งแบบ HTML (คมชัดทุกขนาดจอ)
+function svgBars(data,{h=130,color=COL.brand,hl=-1,fmt=v=>v}={}){
+  const max=Math.max(1,...data.map(d=>d.v)),every=data.length>16?2:1;
+  return `<div class="hbars" style="height:${h}px">${data.map((d,i)=>`<div class="hbc" title="${esc(d.l)}: ${esc(fmt(d.v))}">
+      <span class="hbv">${d.v&&(data.length<=14||d.v===max)?esc(fmt(d.v)):''}</span>
+      <i style="height:${d.v?Math.max(3,d.v/max*100):0}%;background:${i===hl?COL.accent:color}"></i>
+      <span class="hbl">${i%every===0?esc(d.l):''}</span></div>`).join('')}</div>`;
+}
+function svgLine(data,{h=110,color=COL.brand2}={}){
+  const max=Math.max(1,...data.map(d=>d.v)),W=300,step=W/Math.max(1,data.length-1);
+  const pts=data.map((d,i)=>[i*step,h-(d.v/max)*h*.85-4]);
+  const path=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  return `<svg class="chart line" style="height:${h}px" viewBox="0 0 ${W} ${h}" preserveAspectRatio="none"><path d="${path} L${W} ${h} L0 ${h} Z" fill="${color}" opacity=".12"/><path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>
+    <div class="lnl"><span>${esc(data[0].l)}</span><span>สูงสุด ${Math.max(...data.map(d=>d.v))}/วัน</span><span>${esc(data[data.length-1].l)}</span></div>`;
+}
+function svgDonut(segs,center,sub){
+  const tot=segs.reduce((a,s)=>a+s.v,0)||1,R=52,C=2*Math.PI*R;let off=0;
+  return `<div class="donut"><svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="${R}" fill="none" stroke="#EEF3F4" stroke-width="18"/>
+    ${segs.filter(s=>s.v).map(s=>{const len=s.v/tot*C;const el=`<circle cx="70" cy="70" r="${R}" fill="none" stroke="${s.c}" stroke-width="18" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"><title>${esc(s.l)}: ${s.v}</title></circle>`;off+=len;return el;}).join('')}
+    <text x="70" y="68" text-anchor="middle" class="dn-v">${esc(center)}</text><text x="70" y="86" text-anchor="middle" class="dn-s">${esc(sub)}</text></svg>
+    <div class="legend">${segs.map(s=>`<div><i style="background:${s.c}"></i>${esc(s.l)}<b>${s.v}</b></div>`).join('')}</div></div>`;
+}
+function hbars(list,color=COL.brand){
+  const max=Math.max(1,...list.map(x=>x.v));
+  return list.map(x=>`<div class="hb"><div class="hb-l"><span>${esc(x.l)}</span><b>${esc(x.s??x.v)}</b></div><div class="hb-t"><i style="width:${x.v/max*100}%;background:${x.c||color}"></i></div></div>`).join('')||'<div class="empty sm">ยังไม่มีข้อมูล</div>';
+}
+function kpi(label,value,sub,icon,tone='teal',go=''){
+  return `<div class="kpi ${go?'clk':''}" ${go?`data-go="${go}"`:''}><div class="kpi-h"><span>${label}</span><i class="ic ${tone}">${ic(icon)}</i></div><div class="kpi-v">${value}</div><div class="kpi-s">${sub}</div></div>`;
+}
+function dayKey(t){return new Date(t*1000).toLocaleDateString('en-CA',TZ);}
+function dashStats(){
+  const R=AD.rentals, now=nowS(), today=dayKey(now), month=today.slice(0,7);
+  const earned=R.filter(r=>['ready','active','returned'].includes(r.status));
+  const income=r=>Math.max(0,r.amount-r.deposit);
+  const when=r=>r.picked||r.created;
+  const days=[];for(let i=13;i>=0;i--){const t=now-i*86400;days.push({k:dayKey(t),l:new Date(t*1000).toLocaleDateString('th-TH',Object.assign({day:'numeric'},TZ)),v:0,n:0});}
+  earned.forEach(r=>{const d=days.find(x=>x.k===dayKey(when(r)));if(d){d.v+=income(r);d.n++;}});
+  const hours=Array.from({length:24},(_,i)=>({l:String(i),v:0}));
+  R.filter(r=>r.picked).forEach(r=>{const hh=Number(new Date(r.picked*1000).toLocaleString('en-US',Object.assign({hour:'numeric',hour12:false},TZ)))%24;hours[hh].v++;});
+  const camCount={};earned.forEach(r=>{camCount[r.camName]=(camCount[r.camName]||0)+1;});
+  const userCount={};earned.forEach(r=>{const k=r.uname+' ('+r.sid+')';userCount[k]=(userCount[k]||{v:0,h:0});userCount[k].v++;userCount[k].h+=r.hours;});
+  const byStatus=s=>R.filter(r=>r.status===s).length;
+  const active=R.filter(r=>r.status==='active');
+  const returned=R.filter(r=>r.status==='returned');
+  const onTime=returned.filter(r=>!r.lateFee).length;
+  return{
+    todayIncome:earned.filter(r=>dayKey(when(r))===today).reduce((a,r)=>a+income(r),0),
+    monthIncome:earned.filter(r=>dayKey(when(r)).startsWith(month)).reduce((a,r)=>a+income(r),0),
+    totalIncome:earned.reduce((a,r)=>a+income(r),0),
+    todayCount:earned.filter(r=>dayKey(when(r))===today).length,
+    deposits:R.filter(r=>['ready','active'].includes(r.status)||(r.status==='returned'&&!r.refunded)).reduce((a,r)=>a+r.deposit,0),
+    owedTotal:R.filter(r=>r.status!=='cancelled').reduce((a,r)=>a+owed(r),0),
+    days,hours,active,late:active.filter(isLate),
+    verify:R.filter(r=>r.status==='verify'||(r.notified&&owed(r)>0)),ready:R.filter(r=>r.status==='ready'),
+    refunds:returned.filter(r=>!r.refunded),
+    cams:Object.entries(camCount).map(([l,v])=>({l,v})).sort((a,b)=>b.v-a.v).slice(0,6),
+    users:Object.entries(userCount).map(([l,o])=>({l,v:o.v,s:o.v+' ครั้ง · '+o.h+' ชม.'})).sort((a,b)=>b.v-a.v).slice(0,5),
+    status:[{l:'กำลังเช่า',v:byStatus('active'),c:COL.brand},{l:'รอรับ',v:byStatus('ready'),c:COL.brand2},{l:'รอชำระ/ตรวจ',v:byStatus('await')+byStatus('verify'),c:COL.accent},{l:'คืนแล้ว',v:returned.length,c:COL.ok},{l:'ยกเลิก',v:byStatus('cancelled'),c:COL.mute}],
+    onTimePct:returned.length?Math.round(onTime/returned.length*100):100,
+    avgHours:earned.length?Math.round(earned.reduce((a,r)=>a+r.hours,0)/earned.length*10)/10:0,
+    total:R.length
+  };
+}
 VIEWS.a_home=()=>{
-  const d=doorLine();
-  const verify=AD.rentals.filter(r=>r.status==='verify'||(r.notified&&owed(r)>0));
-  const active=AD.rentals.filter(r=>r.status==='active'), late=active.filter(isLate), ready=AD.rentals.filter(r=>r.status==='ready');
-  const refunds=AD.rentals.filter(r=>r.status==='returned'&&!r.refunded);
-  return `<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · ${esc(me.name)}</div><h1>ภาพรวมตู้</h1></div><button class="iconbtn" data-act="refresh">${ic('refresh')}</button></div>
+  const st=dashStats(), d=doorLine();
+  const camsTotal=AD.cams.length||S.cams, camsRented=AD.cams.filter(c=>c.status==='rented').length, camsMaint=AD.cams.filter(c=>c.status==='maint').length;
+  const util=camsTotal?Math.round(camsRented/camsTotal*100):0;
+  const pendId=AD.users.filter(u=>u.verify==='pending').length;
+  const rssiBars=S.rssi>-55?4:S.rssi>-67?3:S.rssi>-75?2:S.rssi?1:0;
+  const feed=(ui.feed&&ui.feed.length?ui.feed.map(f=>({t:Math.floor(f.ts/1000),m:f.m,fresh:Date.now()-f.fresh<4000})):(ui.logs?ui.logs.items.map(l=>({t:l.e,m:l.m})):[])).slice(0,25);
+  const actList=st.active.sort((a,b)=>a.due-b.due).map(r=>{const left=r.due-nowS(),tot=r.hours*3600,pct=Math.max(0,Math.min(100,(1-left/tot)*100));
+    return `<div class="act-it"><div class="row"><b>${esc(r.camName)}</b><span class="xs muted grow">· ${esc(r.uname)}</span><span class="xs ${left<0?'warn-t':''}">${left<0?'เกิน '+dur(-left):'เหลือ '+dur(left)}</span></div><div class="pbar"><i style="width:${pct}%;background:${left<0?COL.warn:left<3600?COL.accent:COL.brand}"></i></div></div>`;}).join('');
+  return `<div class="dash-head"><div class="grow"><div class="hello">ผู้ดูแล · ${esc(me.name)}</div><h1>แดชบอร์ด CamLock</h1></div>
+      <span class="livepill ${live?'on':''}"><i></i>${live?'LIVE':'อัปเดตเป็นรอบ'}</span><button class="iconbtn" data-act="refresh">${ic('refresh')}</button></div>
     ${AD.defaultPw?`<div class="alert warn">${ic('alert')}<div>ยังใช้รหัสผ่านผู้ดูแลเริ่มต้น <b>1234</b> อยู่ ไปที่ <button class="link" data-go="a_set">ตั้งค่า</button> เพื่อเปลี่ยน</div></div>`:''}
-    ${!online?`<div class="alert warn">${ic('wifi')}<div>ตู้ออฟไลน์ ตรวจไฟเลี้ยงและ WiFi “${esc(S.ssid||'ESP_CAMLOCK')}” ${S.lastSeen?'· ออนไลน์ล่าสุด '+tFull(Math.floor(S.lastSeen/1000)):''}</div></div>`:''}
-    ${lockerHero()}
-    <div class="card"><div class="door"><div class="ic ${d.c}">${ic(d.i)}</div><div style="flex:1"><h3>${d.t}</h3><div class="muted sm">${d.s}</div></div></div>
-      ${S.unlocking?`<button class="btn amber" style="margin-top:12px" data-act="aLock">${ic('lock')} ล็อกตอนนี้</button><p class="xs muted center" style="margin:6px 0 0">ถ้าไม่กด ตู้จะล็อกเองใน ${Math.round((S.unlockMs||30000)/1000)} วินาทีหลังปลดล็อก</p>`:`<button class="btn" style="margin-top:12px" data-act="aUnlock">${ic('unlock')} ปลดล็อกตอนนี้</button>`}</div>
-    <div class="grid3" style="margin-bottom:4px"><div class="tile"><div class="v">${verify.length}</div><div class="k">รอตรวจเงิน</div></div><div class="tile"><div class="v">${active.length}</div><div class="k">กำลังเช่า</div></div><div class="tile"><div class="v" style="${late.length?'color:var(--warn)':''}">${late.length}</div><div class="k">เกินกำหนด</div></div></div>
-    ${verify.length?`<div class="sec"><h2>รอตรวจสอบการชำระ</h2></div>${verify.map(adminRentalCard).join('')}`:''}
-    ${late.length?`<div class="sec"><h2>เกินกำหนดคืน</h2></div>${late.map(adminRentalCard).join('')}`:''}
-    ${ready.length?`<div class="sec"><h2>รอรับกล้อง</h2></div>${ready.map(adminRentalCard).join('')}`:''}
-    ${refunds.length?`<div class="sec"><h2>รอคืนมัดจำ</h2></div>${refunds.map(adminRentalCard).join('')}`:''}
-    <div class="sec"><h2>บันทึกการทำงาน</h2><button class="btn sm ghost" data-act="loadLog">${ic('refresh')}</button></div>
-    <div class="card logl" style="padding:6px 16px">${ui.logs?ui.logs.items.map(l=>`<div class="it"><time>${l.e?tDM(l.e)+' '+tHM(l.e):dur((ui.logs.now-l.ms)/1000)+'ก่อน'}</time><span class="${l.m.includes('⚠')?'w':''}">${esc(l.m)}</span></div>`).join('')||'<div class="empty">ยังไม่มี</div>':'<div class="empty sm">กดปุ่มรีเฟรชเพื่อโหลด</div>'}</div>
-    <p class="foot">ปลดล็อกทั้งหมด ${baht(S.unlocks)} ครั้ง · เปิดเครื่องมา ${dur(S.uptime||0)} · RAM ว่าง ${Math.round((S.heap||0)/1024)} KB</p>`;
+    ${!online?`<div class="alert warn">${ic('wifi')}<div>ตู้ออฟไลน์ ${S.lastSeen?'· ส่งข้อมูลล่าสุด '+tFull(Math.floor(S.lastSeen/1000)):''}</div></div>`:''}
+    <div class="kpis">
+      ${kpi('รายได้วันนี้',baht(st.todayIncome)+' ฿',st.todayCount+' รายการ','wallet','ok')}
+      ${kpi('รายได้เดือนนี้',baht(st.monthIncome)+' ฿','รวมทั้งหมด '+baht(st.totalIncome)+' ฿','wallet','teal')}
+      ${kpi('กำลังเช่า',S.hasCounts?S.activeCount:st.active.length,'รอรับ '+(S.hasCounts?S.readyCount:st.ready.length)+' รายการ','bolt','teal','a_rent')}
+      ${kpi('เกินกำหนด',`<span style="${(S.hasCounts?S.overdueCount:st.late.length)?'color:var(--warn)':''}">${S.hasCounts?S.overdueCount:st.late.length}</span>`,'คืนตรงเวลา '+st.onTimePct+'%','alert',(S.overdueCount||st.late.length)?'warn':'ok','a_rent')}
+      ${kpi('รอตรวจเงิน',S.hasCounts?S.pendingPay:st.verify.length,'ค้างชำระรวม '+baht(st.owedTotal)+' ฿','wallet','amber','a_rent')}
+      ${kpi('รอยืนยันตัวตน',S.hasCounts?S.pendingVerify:pendId,'สมาชิก '+(S.hasCounts?S.members:AD.users.length)+' คน','shield','amber','a_users')}
+      ${kpi('กล้องถูกใช้',util+'%',`เช่า ${camsRented} · ว่าง ${S.available??camsTotal-camsRented} · ซ่อม ${camsMaint}`,'cam','teal','a_cams')}
+      ${kpi('มัดจำที่ถืออยู่',baht(st.deposits)+' ฿','รอคืน '+(S.hasCounts?S.refundPending:st.refunds.length)+' รายการ','key','violet')}
+    </div>
+    <div class="dash">
+      <div class="card dcard"><div class="dc-h"><h3>${esc(S.locker?S.locker.name:'ตู้')} ตอนนี้</h3><span class="tag ${online?'ok':'warn'}">${online?'ออนไลน์':'ออฟไลน์'}</span></div>
+        <div class="door" style="margin:6px 0 10px"><div class="ic ${d.c}">${ic(d.i)}</div><div style="flex:1"><b>${d.t}</b><div class="muted sm">${d.s}</div></div></div>
+        ${S.unlocking?`<button class="btn amber" data-act="aLock">${ic('lock')} ล็อกตอนนี้</button>`:`<button class="btn" data-act="aUnlock">${ic('unlock')} ปลดล็อกตอนนี้</button>`}
+        <div class="health">
+          <div><span>สัญญาณ WiFi</span><b><i class="sig s${rssiBars}"><i></i><i></i><i></i><i></i></i> ${S.rssi||'-'} dBm</b></div>
+          <div><span>ส่งข้อมูลล่าสุด</span><b id="lastSeen">${S.lastSeen?dur((Date.now()-S.lastSeen)/1000)+'ที่แล้ว':'-'}</b></div>
+          <div><span>เปิดเครื่องมา</span><b>${dur(S.uptime||0)}</b></div>
+          <div><span>RAM ว่าง</span><b>${Math.round((S.heap||0)/1024)} KB</b></div>
+          <div><span>ปลดล็อกทั้งหมด</span><b>${baht(S.unlocks)} ครั้ง</b></div>
+          <div><span>เฟิร์มแวร์</span><b>${esc(S.fw||'-')}</b></div>
+          <div><span>กลอนเปิดค้างสูงสุด</span><b>${Math.round((S.unlockMs||0)/1000)} วินาที</b></div>
+          <div><span>Reed switch</span><b>${S.reed===false?'ยังไม่ติดตั้ง':'ติดตั้งแล้ว'}</b></div>
+        </div></div>
+      <div class="card dcard wide2"><div class="dc-h"><h3>รายได้ 14 วันล่าสุด</h3><span class="xs muted">บาท · ไม่รวมมัดจำ</span></div>${svgBars(st.days.map(x=>({l:x.l,v:x.v})),{h:200,hl:13,fmt:v=>baht(v)+' ฿'})}</div>
+      <div class="card dcard"><div class="dc-h"><h3>จำนวนการเช่ารายวัน</h3><span class="xs muted">14 วัน</span></div>${svgLine(st.days.map(x=>({l:x.l,v:x.n})))}<div class="mini-k"><span>เฉลี่ยต่อรายการ <b>${st.avgHours} ชม.</b></span><span>ทั้งหมด <b>${st.total}</b> รายการ</span></div></div>
+      <div class="card dcard"><div class="dc-h"><h3>สถานะการเช่า</h3></div>${svgDonut(st.status,String(st.total),'รายการ')}</div>
+      <div class="card dcard"><div class="dc-h"><h3>กล้องยอดนิยม</h3></div>${hbars(st.cams)}</div>
+      <div class="card dcard"><div class="dc-h"><h3>ช่วงเวลาที่มารับกล้อง</h3><span class="xs muted">ตามชั่วโมง</span></div>${svgBars(st.hours,{h:90,color:COL.brand2})}</div>
+      <div class="card dcard"><div class="dc-h"><h3>กำลังเช่าอยู่</h3><span class="xs muted">${st.active.length} รายการ</span></div>${actList||'<div class="empty sm">ไม่มี</div>'}</div>
+      <div class="card dcard"><div class="dc-h"><h3>สมาชิกที่เช่าบ่อย</h3></div>${hbars(st.users,COL.violet)}</div>
+      <div class="card dcard"><div class="dc-h"><h3>สถานะกล้อง</h3><span class="xs muted">${AD.cams.length} ตัว</span></div>
+        <div class="camgrid">${AD.cams.map(c=>`<div class="cg ${c.status}"><b>${esc(c.name)}</b><span>${c.status==='rented'?'ถูกเช่า':c.status==='maint'?'ซ่อมบำรุง':'ว่าง'} · ${baht(c.price)}฿/ชม.</span></div>`).join('')||'<div class="empty sm">ยังไม่มีกล้อง</div>'}</div></div>
+      <div class="card dcard wide2"><div class="dc-h"><h3>เหตุการณ์สด</h3><span class="livepill sm ${live?'on':''}"><i></i>${live?'LIVE':'รอบละ 3 วิ'}</span></div>
+        <div class="logl feed">${feed.map(l=>`<div class="it ${l.fresh?'fresh':''}"><time>${l.t?tDM(l.t)+' '+tHM(l.t):''}</time><span class="${l.m.includes('⚠')?'w':''}">${esc(l.m)}</span></div>`).join('')||'<div class="empty sm">ยังไม่มีเหตุการณ์</div>'}</div></div>
+    </div>
+    ${st.verify.length?`<div class="sec"><h2>รอตรวจสอบการชำระ</h2></div><div class="cards2">${st.verify.map(adminRentalCard).join('')}</div>`:''}
+    ${st.late.length?`<div class="sec"><h2>เกินกำหนดคืน</h2></div><div class="cards2">${st.late.map(adminRentalCard).join('')}</div>`:''}
+    ${st.ready.length?`<div class="sec"><h2>รอรับกล้อง</h2></div><div class="cards2">${st.ready.map(adminRentalCard).join('')}</div>`:''}
+    ${st.refunds.length?`<div class="sec"><h2>รอคืนมัดจำ</h2></div><div class="cards2">${st.refunds.map(adminRentalCard).join('')}</div>`:''}
+    <p class="foot">ข้อมูลจากตู้โดยตรง (ประวัติล่าสุด 40 รายการ) · ${live?'อัปเดตสดผ่าน ThingsBoard WebSocket':'อัปเดตทุก 3 วินาที'}</p>`;
 };
-AFTER.a_home=()=>{if(!ui.logs)ACT.loadLog();};
+AFTER.a_home=()=>{if(!ui.logs&&!(ui.feed&&ui.feed.length))ACT.loadLog();};
 
 VIEWS.a_rent=()=>{
   const F=[['all','ทั้งหมด'],['verify','รอตรวจเงิน'],['ready','รอรับ'],['active','กำลังเช่า'],['late','เกินกำหนด'],['returned','คืนแล้ว'],['cancelled','ยกเลิก']];
@@ -1102,11 +1303,12 @@ let tick=0;
 async function loop(){
   tick++;
   const c=cur().name, fast=c==='open';
-  if(fast||tick%3===0)await loadStatus();
+  if(live?(tick%15===0):(fast||tick%3===0))await loadStatus();
+  else if(cur().name==='a_home'){const t=$('#lastSeen');if(t)t.textContent=S.lastSeen?dur((Date.now()-S.lastSeen)/1000)+'ที่แล้ว':'-';}
   if(me&&(tick%10===0||(fast&&tick%2===0)||(c==='pay'&&tick%4===0)))await loadMe();
-  if(isAdmin()&&tick%10===0&&(c==='a_home'||c==='a_rent'))await loadAdmin();
+  if(isAdmin()&&(c==='a_home'||c==='a_rent')&&tick%(live?20:6)===0)await loadAdmin();
   if(me){
-    if(c==='active'||c==='a_home'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||c==='verify'||(c==='a_set'&&tick%5===0))softRender();
+    if(c==='active'||c==='a_rent'||c==='pay'||c==='open'||c==='home'||c==='verify'||(c==='a_home'&&tick%5===0)||(c==='a_set'&&tick%5===0))softRender();
     else renderTabs();
   }
   setTimeout(loop,1000);
