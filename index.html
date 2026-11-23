@@ -802,9 +802,10 @@ VIEWS.camDetail=p=>{
     <div class="card"><h3 style="margin-bottom:6px">ค่าใช้จ่าย</h3>
       <div class="kv"><span>ค่าเช่า ${baht(c.price)} ฿ × ${ui.hours} ชม.</span><b>${baht(rent)} ฿</b></div>
       <div class="kv"><span>ค่ามัดจำ (ได้คืนหลังคืนกล้อง)</span><b>${baht(c.deposit)} ฿</b></div>
-      <div class="total"><span>ชำระตอนนี้</span><b>${baht(rent+c.deposit)} ฿</b></div>
+      <div class="total"><span>ชำระตอนนี้</span><b>${me.test?'0':baht(rent+c.deposit)} ฿</b></div>
+      ${me.test?`<div class="alert amber" style="margin:10px 0 0">${ic('info')}<div><b>บัญชีทดสอบ</b> ไม่ต้องชำระเงิน จองแล้วไปเปิดตู้ได้เลย (กลอนเปิดจริง)</div></div>`:''}
       <p class="xs muted" style="margin:10px 0 0">ค่ามัดจำจะคืนให้เมื่อคืนกล้องและผู้ดูแลตรวจสภาพผ่าน คืนช้าเกิน 10 นาทีคิดค่าปรับชั่วโมงละ ${baht(c.price)} ฿ หักจากมัดจำ</p></div>
-    ${me.verify==='ok'||me.admin?`<button class="btn" data-act="doRent" data-id="${c.id}">จองและไปชำระเงิน</button>`:`<button class="btn amber" data-go="verify">${ic('shield')} ${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนเพื่อจอง'}</button>`}`;
+    ${me.verify==='ok'||me.admin||me.test?`<button class="btn" data-act="doRent" data-id="${c.id}">${me.test?'จองแบบทดสอบ (ข้ามการชำระเงิน)':'จองและไปชำระเงิน'}</button>`:`<button class="btn amber" data-go="verify">${ic('shield')} ${me.verify==='pending'?'รอตรวจการยืนยันตัวตน':'ยืนยันตัวตนเพื่อจอง'}</button>`}`;
 };
 
 function fmtPP(id){id=String(id||'');return id.length===10?id.replace(/^(\d{3})(\d{3})(\d{4})$/,'$1-$2-$3'):id.length===13?id.replace(/^(\d)(\d{4})(\d{5})(\d{2})(\d)$/,'$1-$2-$3-$4-$5'):id;}
@@ -956,7 +957,7 @@ VIEWS.active=()=>{
     return `<div class="top"><div class="grow"><div class="hello">กำลังเช่าอยู่</div><h1>ยังไม่มีรายการ</h1></div></div>
     <div class="card empty"><div class="ic teal">${ic('cam')}</div><h3 style="color:var(--ink)">ยังไม่ได้เช่ากล้อง</h3><p class="sm">เลือกกล้องแล้วรับที่ตู้ได้ทันที</p><button class="btn" data-go="rent" style="margin-top:8px">เลือกกล้อง</button></div>
     ${last?`<div class="card"><div class="row"><div class="grow"><div class="xs muted">ครั้งล่าสุด</div><h3>${esc(last.camName)}</h3><div class="sm muted">คืนเมื่อ ${tFull(last.returned)}</div></div>${statusTag(last)}</div>
-      ${!last.refunded?`<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div>มัดจำ ${baht(refundable(last))} ฿ รอผู้ดูแลตรวจสภาพและคืนเงิน</div></div>`:''}</div>`:''}`;}
+      ${!last.refunded&&last.deposit?`<div class="alert teal" style="margin:10px 0 0">${ic('wallet')}<div>มัดจำ ${baht(refundable(last))} ฿ รอผู้ดูแลตรวจสภาพและคืนเงิน</div></div>`:''}</div>`:''}`;}
   const d=doorLine();
   const details=`<div class="card"><div class="kv"><span>กล้อง</span><b>${esc(r.camName)}</b></div><div class="kv"><span>รับ/คืนที่</span><b>${esc(S.locker?S.locker.name+' · '+S.locker.loc:'-')}</b></div>
       <div class="kv"><span>ระยะเวลา</span><b>${r.hours} ชม.</b></div><div class="kv"><span>มัดจำ</span><b class="mono">${baht(r.deposit)} ฿</b></div>
@@ -1109,7 +1110,7 @@ function adminRentalCard(r){
   else if(r.status==='await')acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับเงินสดแล้ว</button>`);
   if(['await','verify','ready'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="cancel" data-rid="${r.id}">ยกเลิก</button>`);
   if(r.status==='active'){if(due>0&&!r.notified)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿</button>`);acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="returned" data-rid="${r.id}">รับคืนเอง</button>`);}
-  if(r.status==='returned'){if(due>0&&!r.refunded)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿ เป็นเงินสด</button>`);if(!r.refunded)acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">คืนมัดจำแล้ว ${baht(refundable(r))} ฿</button>`);}
+  if(r.status==='returned'){if(due>0&&!r.refunded)acts.push(`<button class="btn sm ghost" data-act="aRent" data-a="confirm" data-rid="${r.id}">รับยอดค้าง ${baht(due)} ฿ เป็นเงินสด</button>`);if(!r.refunded&&r.deposit)acts.push(`<button class="btn sm" data-act="aRent" data-a="refund" data-rid="${r.id}">คืนมัดจำแล้ว ${baht(refundable(r))} ฿</button>`);}
   if(r.photoPick)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="pickup">${ic('cam')} หลักฐานรับ</button>`);
   if(r.photoRet)acts.push(`<button class="btn sm ghost" data-act="aEvidence" data-rid="${r.id}" data-k="return">${ic('cam')} หลักฐานคืน</button>`);
   if(['returned','cancelled'].includes(r.status))acts.push(`<button class="btn sm danger" data-act="aRent" data-a="delete" data-rid="${r.id}">${ic('trash')}</button>`);
@@ -1177,7 +1178,7 @@ function dashStats(){
     owedTotal:R.filter(r=>r.status!=='cancelled').reduce((a,r)=>a+owed(r),0),
     days,hours,active,late:active.filter(isLate),
     verify:R.filter(r=>r.status==='verify'||(r.notified&&owed(r)>0)),ready:R.filter(r=>r.status==='ready'),
-    refunds:returned.filter(r=>!r.refunded),
+    refunds:returned.filter(r=>!r.refunded&&r.deposit),
     cams:Object.entries(camCount).map(([l,v])=>({l,v})).sort((a,b)=>b.v-a.v).slice(0,6),
     users:Object.entries(userCount).map(([l,o])=>({l,v:o.v,s:o.v+' ครั้ง · '+o.h+' ชม.'})).sort((a,b)=>b.v-a.v).slice(0,5),
     status:[{l:'กำลังเช่า',v:byStatus('active'),c:COL.brand},{l:'รอรับ',v:byStatus('ready'),c:COL.brand2},{l:'รอชำระ/ตรวจ',v:byStatus('await')+byStatus('verify'),c:COL.accent},{l:'คืนแล้ว',v:returned.length,c:COL.ok},{l:'ยกเลิก',v:byStatus('cancelled'),c:COL.mute}],
@@ -1260,7 +1261,7 @@ VIEWS.a_cams=()=>`<div class="top"><div class="grow"><div class="hello">ผู�
 
 VIEWS.a_users=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 60 คน</div><h1>สมาชิก ${AD.users.length} คน</h1></div></div>
   <div class="cards2">${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
-    <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}${u.studentId?' · รหัส '+esc(u.studentId):''}</div></div>${u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':`<span class="tag ${VF[u.verify][1]}">${VF[u.verify][0]}</span>`}</div>
+    <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}${u.studentId?' · รหัส '+esc(u.studentId):''}</div></div>${u.test?'<span class="tag teal">บัญชีทดสอบ</span>':u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':`<span class="tag ${VF[u.verify][1]}">${VF[u.verify][0]}</span>`}</div>
     ${u.verify==='pending'?`<div class="btns"><button class="btn sm" data-act="aViewId" data-idx="${u.idx}">${ic('id')} ดูรูปยืนยันตัวตน</button></div>`:''}
     <div class="meta" style="margin-top:6px">เช่า ${u.rentals} ครั้ง · ${u.hours} ชม. · คืนช้า ${u.late} ครั้ง${u.created?' · สมัคร '+tDM(u.created):''}</div>
     ${u.idx!==me.idx?`<div class="btns"><button class="btn sm ghost" data-act="aUserPw" data-idx="${u.idx}">${ic('key')} ตั้งรหัสใหม่</button>
