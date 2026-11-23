@@ -29,19 +29,6 @@ button{cursor:pointer}
 .app{position:relative;width:100%;height:100%;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;overflow:clip}
 .app{height:100vh;height:100dvh}
 .scr{flex:1;overflow-y:auto;overflow-x:hidden;padding:max(18px,env(safe-area-inset-top)) max(18px,calc((100% - 760px)/2)) 24px;scroll-behavior:smooth}
-/* ---------- ปรับตามขนาดจอ: มือถือ = แถบล่าง, แท็บเล็ต/คอม = แถบเมนูด้านข้าง ---------- */
-@media(min-width:900px){
-  .app{flex-direction:row}
-  .tabs{order:-1;flex-direction:column;justify-content:flex-start;gap:6px;width:96px;flex:none;border-top:0;border-right:1px solid var(--line);padding:22px 8px}
-  .tabs button{flex:none;padding:10px 0;border-radius:14px;font-size:12px}
-  .tabs button.on{background:var(--brandSoft)}
-  .tabs button .badge{margin:-4px 0 0 22px}
-  .scr{padding:28px max(28px,calc((100% - 820px)/2)) 32px}
-  .stage{height:420px}
-  .sheet{left:50%;right:auto;width:min(560px,94%);bottom:auto;top:50%;border-radius:26px;max-height:86%;transform:translate(-50%,-40%);opacity:0;transition:transform .25s,opacity .25s,visibility 0s .25s}
-  .sheet.on{transform:translate(-50%,-50%);opacity:1;transition:transform .25s,opacity .25s}
-  .sheet .grab{display:none}
-}
 .scr::-webkit-scrollbar{display:none}
 .tabs{display:flex;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 6px max(10px,env(safe-area-inset-bottom))}
 .tabs button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--ink3);padding:4px 0;font-weight:500}
@@ -258,7 +245,7 @@ h3{font-size:16px;font-weight:600}
 .led.pwr{left:44px;background:#3DDC84;box-shadow:0 0 6px #3DDC84}
 .led.sts{left:68px}.scene.online .led.sts{background:#4FA3FF;box-shadow:0 0 6px #4FA3FF;animation:blink 1.4s infinite}
 .led.rly{left:92px}.scene.unlocked .led.rly{background:#FF5A4F;box-shadow:0 0 8px #FF5A4F}
-.lbl{position:absolute;top:61px;font:600 5.5px var(--fn);color:#CFEFDA}.lbl.l1{left:40px}.lbl.l2{left:60px}.lbl.l3{left:88px}
+.pcb .lbl{position:absolute;top:61px;font:600 5.5px var(--fn);color:#CFEFDA}.lbl.l1{left:40px}.lbl.l2{left:60px}.lbl.l3{left:88px}
 @keyframes blink{50%{opacity:.35}}
 .cap3d{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;align-items:center;gap:6px;color:#DDF3F3;font-size:13.5px;font-weight:600}
 .cap3d svg{width:16px;height:16px}
@@ -329,11 +316,39 @@ label.btn input{display:none}
 .cg.rented{background:var(--accentSoft)}.cg.maint{background:#EEF1F2}.cg span{color:var(--ink2)}
 .feed{max-height:300px;overflow:auto}.feed .it.fresh{animation:fresh 2.5s}
 @keyframes fresh{0%{background:#DFF6EA}100%{background:transparent}}
-.app.wide .cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.app.wide .cards2 .rcard{margin:0}
+.app.wide .cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.app.wide .cards2 .rcard,.app.wide .cards2 .cam{margin:0}
+.app.wide .cards2>.empty{grid-column:1/-1}
 .offbar{display:flex;gap:10px;align-items:flex-start;background:#FDEAE0;color:#7D2E0A;border-radius:14px;padding:10px 13px;margin:0 0 12px;font-size:13px;box-shadow:0 0 0 1px rgba(180,65,15,.15)}
 .offbar .xs{margin-top:2px;opacity:.85}
 .pulse-dot{width:10px;height:10px;border-radius:50%;background:#E5484D;flex:none;margin-top:4px;animation:offp 1.4s infinite}
 @keyframes offp{0%{box-shadow:0 0 0 0 rgba(229,72,77,.6)}70%{box-shadow:0 0 0 8px rgba(229,72,77,0)}100%{box-shadow:0 0 0 0 rgba(229,72,77,0)}}
+/* ---------- ปรับตามขนาดจอ (ต้องอยู่ท้ายสุด ให้ทับกฎข้างบนได้) ---------- */
+.toast{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));transform:translate(-50%,calc(100% + 140px))}
+.toast.on{transform:translate(-50%,0)}
+.tabs button{position:relative;min-width:0}
+@media(min-width:600px) and (max-width:899px){
+  .scr{padding-left:max(24px,calc((100% - 720px)/2));padding-right:max(24px,calc((100% - 720px)/2))}
+  .tabs{justify-content:center}.tabs button{max-width:120px}
+}
+@media(min-width:900px){
+  .app{flex-direction:row}
+  .tabs{order:-1;flex:none;flex-direction:column;justify-content:flex-start;align-items:stretch;gap:4px;width:92px;border-top:0;border-right:1px solid var(--line);padding:18px 10px;background:var(--surf);backdrop-filter:none}
+  .tabs::before{content:"";display:block;width:44px;height:44px;margin:0 auto 14px;border-radius:14px;flex:none;background:linear-gradient(140deg,var(--brand),var(--brand2)) center/24px no-repeat;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9h2.5l1-1.5h5l1 1.5H18v8H6z' fill='none' stroke='white' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='12.5' r='2' fill='none' stroke='white' stroke-width='1.5'/%3E%3C/svg%3E"),linear-gradient(140deg,var(--brand),var(--brand2));background-size:26px,cover;background-position:center;background-repeat:no-repeat}
+  .tabs button{flex:none;padding:10px 2px;border-radius:14px;font-size:11.5px;gap:4px}
+  .tabs button:hover{background:var(--surf2)}
+  .tabs button.on{background:var(--brandSoft)}
+  .tabs button .badge{top:4px;right:12px;margin:0}
+  .scr{padding:28px max(32px,calc((100% - 960px)/2)) 40px}
+  .app.wide .scr{padding:26px max(28px,calc((100% - 1480px)/2)) 40px}
+  .toast{bottom:28px;left:calc(50% + 46px)}
+  .stage{height:440px}
+  .sheet{left:50%;right:auto;top:50%;bottom:auto;width:min(580px,92%);max-height:86vh;border-radius:24px;padding:22px 24px;opacity:0;transform:translate(-50%,-46%);transition:transform .22s,opacity .22s,visibility 0s .22s}
+  .sheet.on{opacity:1;transform:translate(-50%,-50%);transition:transform .22s,opacity .22s}
+  .sheet .grab{display:none}
+  .grid2{gap:14px}
+  .cams-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.cams-grid .cam{margin:0}
+}
+.narrow{max-width:880px;margin:0 auto}
 .printqr{display:none}
 @media print{body *{visibility:hidden}.printqr,.printqr *{visibility:visible}.printqr{display:block;position:fixed;inset:0;background:#fff;text-align:center;padding:40px;font-family:var(--fd)}.printqr svg{width:60%;max-width:420px}}
 </style>
@@ -350,7 +365,7 @@ label.btn input{display:none}
 <!-- ช่องเลือกรูปอยู่นอกส่วนที่วาดใหม่ทุกวินาที ไม่งั้นเลือกรูปแล้วเหตุการณ์หาย -->
 <input type="file" id="filePick" accept="image/*" hidden>
 
-<script src="config.js?v=12"></script>
+<script src="config.js?v=13"></script>
 <script>
 /* ---------- QR Code (byte mode, ECC M, v1–10) — ดัดแปลงจากหลักการของ Nayuki (MIT) ---------- */
 const QR=(()=>{
@@ -1180,31 +1195,31 @@ VIEWS.a_rent=()=>{
   const list=AD.rentals.filter(match).sort((a,b)=>b.id-a.id);
   return `<div class="top"><div class="grow"><div class="hello">ผู้ดูแล</div><h1>การเช่า</h1></div><button class="iconbtn" data-act="refresh">${ic('refresh')}</button></div>
     <div class="filters">${F.map(([k,l])=>`<button class="${ui.filter===k?'on':''}" data-act="setFilter" data-f="${k}">${l}</button>`).join('')}</div>
-    ${list.map(adminRentalCard).join('')||`<div class="card empty"><div class="ic teal">${ic('list')}</div>ไม่มีรายการ</div>`}`;
+    ${list.length?`<div class="cards2">${list.map(adminRentalCard).join('')}</div>`:`<div class="card empty"><div class="ic teal">${ic('list')}</div>ไม่มีรายการ</div>`}`;
 };
 
 VIEWS.a_cams=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 8 ตัว</div><h1>กล้องในตู้</h1></div><button class="iconbtn" data-act="camSheet">${ic('plus')}</button></div>
-  ${AD.cams.map(c=>`<div class="cam"><span class="ph">${ic('cam')}</span><span style="flex:1;min-width:0"><span class="nm">${esc(c.name)}</span> ${c.status==='rented'?'<span class="tag amber">ถูกเช่า</span>':c.status==='maint'?'<span class="tag grey">ซ่อมบำรุง</span>':'<span class="tag ok">ว่าง</span>'}
+  <div class="cards2">${AD.cams.map(c=>`<div class="cam"><span class="ph">${ic('cam')}</span><span style="flex:1;min-width:0"><span class="nm">${esc(c.name)}</span> ${c.status==='rented'?'<span class="tag amber">ถูกเช่า</span>':c.status==='maint'?'<span class="tag grey">ซ่อมบำรุง</span>':'<span class="tag ok">ว่าง</span>'}
     <span class="ln" style="display:block">+ ${esc(c.lens||'-')} · ${baht(c.price)} ฿/ชม. · มัดจำ ${baht(c.deposit)}</span></span>
-    <button class="iconbtn" style="width:38px;height:38px;box-shadow:none;background:var(--surf2)" data-act="camSheet" data-id="${c.id}">${ic('edit')}</button></div>`).join('')||`<div class="card empty"><div class="ic teal">${ic('cam')}</div>ยังไม่มีกล้อง กด + เพื่อเพิ่ม</div>`}
-  <button class="btn ghost" data-act="camSheet">${ic('plus')} เพิ่มกล้อง</button>`;
+    <button class="iconbtn" style="width:38px;height:38px;box-shadow:none;background:var(--surf2)" data-act="camSheet" data-id="${c.id}">${ic('edit')}</button></div>`).join('')||`<div class="card empty"><div class="ic teal">${ic('cam')}</div>ยังไม่มีกล้อง กด + เพื่อเพิ่ม</div>`}</div>
+  <button class="btn ghost" data-act="camSheet" style="margin-top:12px">${ic('plus')} เพิ่มกล้อง</button>`;
 
 VIEWS.a_users=()=>`<div class="top"><div class="grow"><div class="hello">ผู้ดูแล · สูงสุด 60 คน</div><h1>สมาชิก ${AD.users.length} คน</h1></div></div>
-  ${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
+  <div class="cards2">${[...AD.users].sort((a,b)=>(b.verify==='pending')-(a.verify==='pending')).map(u=>`<div class="rcard"><div class="row"><div class="av" style="width:42px;height:42px;font-size:15px;border-radius:13px;${u.admin?'background:var(--accent)':''}">${esc((u.name||u.sid).slice(0,1))}</div>
     <div class="grow"><b style="font-family:var(--fd)">${esc(u.name)}</b><div class="meta">${esc(u.sid)} · ${esc(u.phone||'-')}${u.studentId?' · รหัส '+esc(u.studentId):''}</div></div>${u.admin?'<span class="tag amber">ผู้ดูแล</span>':u.disabled?'<span class="tag warn">ระงับ</span>':`<span class="tag ${VF[u.verify][1]}">${VF[u.verify][0]}</span>`}</div>
     ${u.verify==='pending'?`<div class="btns"><button class="btn sm" data-act="aViewId" data-idx="${u.idx}">${ic('id')} ดูรูปยืนยันตัวตน</button></div>`:''}
     <div class="meta" style="margin-top:6px">เช่า ${u.rentals} ครั้ง · ${u.hours} ชม. · คืนช้า ${u.late} ครั้ง${u.created?' · สมัคร '+tDM(u.created):''}</div>
     ${u.idx!==me.idx?`<div class="btns"><button class="btn sm ghost" data-act="aUserPw" data-idx="${u.idx}">${ic('key')} ตั้งรหัสใหม่</button>
       <button class="btn sm ghost" data-act="aUser" data-a="${u.disabled?'enable':'disable'}" data-idx="${u.idx}">${u.disabled?'ปลดระงับ':'ระงับ'}</button>
       <button class="btn sm ghost" data-act="aUser" data-a="${u.admin?'unadmin':'admin'}" data-idx="${u.idx}">${u.admin?'เอาสิทธิ์ผู้ดูแลออก':'ตั้งเป็นผู้ดูแล'}</button>
-      <button class="btn sm danger" data-act="aUser" data-a="delete" data-idx="${u.idx}">${ic('trash')}</button></div>`:'<div class="meta" style="margin-top:4px">(บัญชีของคุณ)</div>'}</div>`).join('')}`;
+      <button class="btn sm danger" data-act="aUser" data-a="delete" data-idx="${u.idx}">${ic('trash')}</button></div>`:'<div class="meta" style="margin-top:4px">(บัญชีของคุณ)</div>'}</div>`).join('')}</div>`;
 
 VIEWS.a_set=()=>{
   const s=ui.settings;
   if(!s)return `<div class="top"><div class="grow"><h1>ตั้งค่า</h1></div></div><div class="card row"><div class="spin"></div>กำลังโหลด…</div>`;
   const url=appUrl();
   let q='';try{q=QR.svg(url);}catch(e){}
-  return `<div class="top"><div class="grow"><div class="hello">ผู้ดูแล</div><h1>ตั้งค่า</h1></div></div>
+  return `<div class="narrow"><div class="top"><div class="grow"><div class="hello">ผู้ดูแล</div><h1>ตั้งค่า</h1></div></div>
   <div class="card"><h3 style="margin-bottom:10px">ข้อมูลตู้</h3>
     <label class="lb">ชื่อตู้</label><input class="inp" id="sName" value="${esc(s.lockerName)}" maxlength="20">
     <label class="lb">ที่ตั้ง</label><input class="inp" id="sLoc" value="${esc(s.lockerLoc)}" maxlength="30">
@@ -1225,7 +1240,7 @@ VIEWS.a_set=()=>{
   <div class="card"><div class="kv"><span>เฟิร์มแวร์</span><b>${esc(S.fw)}</b></div><div class="kv"><span>IP</span><b class="mono">${esc(S.ip)}</b></div>
     <div class="kv"><span>WiFi ของตู้</span><b>${esc(S.ssid)} · ${S.rssi} dBm</b></div><div class="kv"><span>ThingsBoard</span><b>${online?'ออนไลน์':'ออฟไลน์'} · ${S.lastSeen?tHM(Math.floor(S.lastSeen/1000)):'-'}</b></div>
     <p class="xs muted" style="margin:8px 0 0">เปลี่ยน WiFi / Token ได้ที่ส่วนตั้งค่าบนสุดของไฟล์ camlock.ino แล้วอัปโหลดใหม่</p>
-    <div class="btns"><button class="btn sm danger" data-act="logout">${ic('out')} ออกจากระบบ</button></div></div>`;
+    <div class="btns"><button class="btn sm danger" data-act="logout">${ic('out')} ออกจากระบบ</button></div></div></div>`;
 };
 AFTER.a_set=()=>{if(!ui.settings)ACT.loadSettings();};
 
